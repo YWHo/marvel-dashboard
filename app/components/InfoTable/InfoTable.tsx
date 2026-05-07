@@ -72,7 +72,7 @@ export function InfoTable({
     fallbackData: mockData,
   });
 
-  const tableItems = data && !error ? mapToInfoList(data.data.results) : [];
+  const tableItems = data && !error ? mapToInfoList(data.data?.results) : [];
 
   if (mockData && mockData.length > 0) {
     totalItems = mockData.length;
