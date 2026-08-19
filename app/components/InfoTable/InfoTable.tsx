@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import useSWR from "swr";
 import clsx from "clsx";
-import {
+import type {
   InfoList,
   RowDisplayType,
-  OnClickCallbackFn,
+  OnClickCallbackType,
   SortOrder,
 } from "@/app/lib/type-definitions";
 import { RowComponentWithImage } from "./RowComponentWithImage";
@@ -29,7 +29,7 @@ type Props = {
   disablePointer?: boolean;
   hasSearchBox?: boolean;
   hasSortButtons?: boolean;
-  onClickCallback?: OnClickCallbackFn;
+  onClickCallback?: OnClickCallbackType;
   orderByType?: string;
   mockData?: InfoList;
   searchByType?: string;

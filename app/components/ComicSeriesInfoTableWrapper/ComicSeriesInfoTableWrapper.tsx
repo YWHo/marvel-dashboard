@@ -1,0 +1,57 @@
+"use client";
+
+import React from "react";
+import useSWR from "swr";
+import { useRouter } from "next/navigation";
+import { Spinner } from "@/app/components/Spiner";
+import {
+  type ComicSeriesItemType,
+  ComicSeriesInfoTable,
+} from "@/app/components/ComicSeriesInfoTable";
+
+const fetcher = (url: string) => {
+  if (!url || url.length == 0) return null;
+  return fetch(url).then((res) => res.json());
+};
+
+type ComicSeriesType = {
+  total: number;
+  limit: number;
+  offset: number;
+  has_next: boolean;
+  items: ComicSeriesItemType[];
+};
+
+export function ComicSeriesInfoTableWrapper() {
+  const router = useRouter();
+  const requestUrl = "/api/comic-series";
+  const { data, error, isValidating } = useSWR(requestUrl, fetcher, {
+    keepPreviousData: true,
+    fallbackData: undefined,
+  });
+
+  const comicSeriesData: ComicSeriesType = data;
+
+  const tableItems =
+    comicSeriesData?.items && !error ? comicSeriesData.items : [];
+
+  return (
+    <div className="relative min-h-[100px]: max-w-screen-lg mt-8">
+      <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
+        The Marvel comic series
+      </h1>
+      {isValidating && (
+        <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
+          <Spinner />
+        </div>
+      )}
+      {error && <div className="text-center text-red-500">Failed to load </div>}
+      <section className="flex flex-col items-center justify-center">
+        <ComicSeriesInfoTable itemList={tableItems} onClickCallBack={(id) => {
+          router.push(`/comic-series/${id}`);
+        }} />
+        <div className="my-8">&nbsp;</div>
+      </section>
+    </div>
+  );
+}
