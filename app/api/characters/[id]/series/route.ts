@@ -4,9 +4,9 @@ import { fetchData, getServerCacheKey, getTargetUrl } from "@/app/lib/helpers";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: number } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
   const targetBaseUrl = `${baseURL}/v1/public/characters/${id}/series`;
   const targetUrl = getTargetUrl(req.url, targetBaseUrl);
   const cacheKey = getServerCacheKey(req.url, targetBaseUrl);

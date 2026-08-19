@@ -56,10 +56,10 @@ export function getServerCacheKey(reqUrl: string, targetBaseUrl: string): string
 }
 
 export function getTargetUrl(reqUrl: string, targetBaseUrl: string): string {
-  const apiKeyPublic = process.env.MARVEL_ACCESS_PUBLIC_KEY;
-  const apiKeyPrivate = process.env.MARVEL_ACCESS_PRIVATE_KEY;
+  // const apiKeyPublic = process.env.MARVEL_ACCESS_PUBLIC_KEY;
+  // const apiKeyPrivate = process.env.MARVEL_ACCESS_PRIVATE_KEY;
   const timeStamp = getTimestamp("iso");
-  const hash = generateMD5(`${timeStamp}${apiKeyPrivate}${apiKeyPublic}`);
+  // const hash = generateMD5(`${timeStamp}`);
   const urlObject = new URL(targetBaseUrl);
 
   // Append incoming query parameters to the target URL
@@ -70,8 +70,8 @@ export function getTargetUrl(reqUrl: string, targetBaseUrl: string): string {
 
   // Add new query parameters
   urlObject.searchParams.append("ts", timeStamp as string);
-  urlObject.searchParams.append("apikey", apiKeyPublic as string);
-  urlObject.searchParams.append("hash", hash);
+  // urlObject.searchParams.append("apikey", apiKeyPublic as string);
+  // urlObject.searchParams.append("hash", hash);
 
   return urlObject.toString();
 }

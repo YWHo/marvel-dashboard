@@ -1,2 +1,2 @@
 
-export const baseURL = "https://gateway.marvel.com";
+export const baseURL = "https://marvel.emreparker.com";
