@@ -35,7 +35,7 @@ export function ComicIssuesInfoTable({
       )}
     >
       <ul className="flex-grow min-h-[100px] w-[290px] sm:w-[600px] md:w-[800px] lg:w-[900px] flex flex-col list-none p-0 overflow-y-auto gap-y-2">
-        {itemList.map((item, i) => (
+        {itemList.map((item) => (
           <ComicIssuesItem
             key={`${item.id}_${item.title.substring(5)}`}
             {...item}
@@ -54,8 +54,6 @@ function ComicIssuesItem({
   className,
   id,
   title,
-  issueNumber,
-  detailUrl,
   onSaleDate,
   unlimitedDate,
   yearPage,

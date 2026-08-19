@@ -5,10 +5,10 @@ import useSWR from "swr";
 import clsx from "clsx";
 import type {
   InfoList,
-  RowDisplayType,
   OnClickCallbackType,
   SortOrder,
 } from "@/app/lib/type-definitions";
+import { RowDisplayType } from "@/app/lib/type-definitions";
 import { RowComponentWithImage } from "./RowComponentWithImage";
 import { RowComponentSimple } from "./RowComponentSimple";
 import { SearchBox } from "@/app/components/SearchBox";
