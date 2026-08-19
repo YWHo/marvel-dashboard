@@ -6,11 +6,11 @@ import { Footer } from "@/app/components/Footer";
 import { HeroPotrait } from "@/app/components/HeroPotrait";
 
 type Props = {
-  params: { characterId: string };
+  params: Promise<{ characterId: string }>;
 };
 
-export default function HeroDetail({ params }: Props) {
-  const { characterId } = params;
+export default async function HeroDetail({ params }: Props) {
+  const { characterId } = await params;
 
   return (
     <div className="container mx-auto mt-12 p-2 pb-10 font-[family-name:var(--font-geist-sans)]">

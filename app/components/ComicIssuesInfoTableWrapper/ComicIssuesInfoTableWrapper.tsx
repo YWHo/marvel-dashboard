@@ -21,7 +21,7 @@ type ComicIssuesType = {
 };
 
 type ComicIssuesInfoTableWrapperProps = {
-  seriesId: number;
+  seriesId: string;
 };
 
 export function ComicIssuesInfoTableWrapper({

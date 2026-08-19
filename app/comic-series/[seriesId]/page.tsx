@@ -5,11 +5,11 @@ import { Footer } from "@/app/components/Footer";
 import { ComicIssuesInfoTableWrapper } from "@/app/components/ComicIssuesInfoTableWrapper";
 
 type PageProps = {
-  params: { seriesId: number; }
+  params: Promise<{ seriesId: string }>;
 };
 
-export default function ComicIssuesPage({ params }: PageProps) {
-  const { seriesId } = params;
+export default async function ComicIssuesPage({ params }: PageProps) {
+  const { seriesId } = await params;
   
   return (
     <div className="container mx-auto p-2 font-[family-name:var(--font-geist-sans)]">

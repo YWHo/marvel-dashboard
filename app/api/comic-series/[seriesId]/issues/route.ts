@@ -3,11 +3,11 @@ import { baseURL } from "@/app/lib/constants";
 import { fetchData, getServerCacheKey, getTargetUrl } from "@/app/lib/helpers";
 
 type ReqParams = {
-  params: { seriesId: number };
+  params: Promise<{ seriesId: string }>;
 };
 
 export async function GET(req: NextRequest, { params }: ReqParams) {
-  const { seriesId } = params;
+  const { seriesId } = await params;
   console.log('GET issues: seriesId: ', seriesId);
   const targetBaseUrl = `${baseURL}/v1/series/${seriesId}/issues`;
   const targetUrl = getTargetUrl(req.url, targetBaseUrl);
