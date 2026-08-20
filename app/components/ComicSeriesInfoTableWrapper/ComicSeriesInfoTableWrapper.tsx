@@ -1,18 +1,13 @@
 "use client";
 
 import React from "react";
-import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
+import { useApiData } from "@/app/hooks/useApiData";
 import {
   type ComicSeriesItemType,
   ComicSeriesInfoTable,
 } from "@/app/components/ComicSeriesInfoTable";
-
-const fetcher = (url: string) => {
-  if (!url || url.length == 0) return null;
-  return fetch(url).then((res) => res.json());
-};
 
 type ComicSeriesType = {
   total: number;
@@ -25,12 +20,12 @@ type ComicSeriesType = {
 export function ComicSeriesInfoTableWrapper() {
   const router = useRouter();
   const requestUrl = "/api/comic-series";
-  const { data, error, isValidating } = useSWR(requestUrl, fetcher, {
+  const { data, error, isValidating } = useApiData<ComicSeriesType>(requestUrl, {
     keepPreviousData: true,
     fallbackData: undefined,
   });
 
-  const comicSeriesData: ComicSeriesType = data;
+  const comicSeriesData = data;
 
   const tableItems =
     comicSeriesData?.items && !error ? comicSeriesData.items : [];
