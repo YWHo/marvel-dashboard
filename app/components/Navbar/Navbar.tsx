@@ -16,20 +16,20 @@ export function Navbar() {
         </div>
 
         {/* Centered links */}
-        {/* <div className="flex-1 flex justify-center pl-4 space-x-1 md:space-x-6">
-          <a href="#comic_group" className="text-sm md:text-lg hover:text-gray-300 hover:underline">
-            Comics
-          </a>
-          <a href="#event_group" className="text-sm md:text-lg hover:text-gray-300 hover:underline">
-            Events
-          </a>
-          <a href="#series_group" className="text-sm md:text-lg hover:text-gray-300 hover:underline">
+        <div className="flex-1 flex justify-center pl-4 space-x-1 md:space-x-6">
+          <a
+            href="/comic-series"
+            className="text-sm md:text-lg hover:text-gray-300 hover:underline"
+          >
             Series
           </a>
-          <a href="#story_group" className="text-sm md:text-lg hover:text-gray-300 hover:underline">
-            Stories
+          <a
+            href="/comic-issues"
+            className="text-sm md:text-lg hover:text-gray-300 hover:underline"
+          >
+            Issues
           </a>
-        </div> */}
+        </div>
       </div>
     </nav>
   );

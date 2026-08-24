@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
 import { useApiData } from "@/app/hooks/useApiData";
@@ -9,7 +8,7 @@ import {
   ComicSeriesInfoTable,
 } from "@/app/components/ComicSeriesInfoTable";
 
-type ComicSeriesType = {
+type ComicSeriesApiType = {
   total: number;
   limit: number;
   offset: number;
@@ -20,7 +19,7 @@ type ComicSeriesType = {
 export function ComicSeriesInfoTableWrapper() {
   const router = useRouter();
   const requestUrl = "/api/comic-series";
-  const { data, error, isValidating } = useApiData<ComicSeriesType>(requestUrl, {
+  const { data, error, isValidating } = useApiData<ComicSeriesApiType>(requestUrl, {
     keepPreviousData: true,
     fallbackData: undefined,
   });
@@ -31,7 +30,7 @@ export function ComicSeriesInfoTableWrapper() {
     comicSeriesData?.items && !error ? comicSeriesData.items : [];
 
   return (
-    <div className="relative min-h-[100px]: max-w-screen-lg mt-8">
+    <div className="relative min-h-[100px]: max-w-5xl mt-8">
       <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
         The Marvel comic series
       </h1>

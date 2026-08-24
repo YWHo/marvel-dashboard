@@ -1,14 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
 import { useApiData } from "@/app/hooks/useApiData";
 
-import {
-  type ComicIssueItemType,
-  ComicIssuesInfoTable,
-} from "@/app/components/ComicIssuesInfoTable";
+import { ComicIssuesInfoTable } from "@/app/components/ComicIssuesInfoTable";
+import type { ComicIssueItemType } from "@/app/components/ComicIssueItemDetails";
 
-type ComicIssuesType = {
+type ComicIssuesApiType = {
   series_id: number;
   series_name: string;
   items: ComicIssueItemType[];
@@ -21,11 +20,17 @@ type ComicIssuesInfoTableWrapperProps = {
 export function ComicIssuesInfoTableWrapper({
   seriesId,
 }: ComicIssuesInfoTableWrapperProps) {
-  const requestUrl = seriesId? `/api/comic-series/${seriesId}/issues` : `/api/comic-issues`;
-  const { data, error, isValidating } = useApiData<ComicIssuesType>(requestUrl, {
-    keepPreviousData: true,
-    fallbackData: undefined,
-  });
+  const router = useRouter();
+  const requestUrl = seriesId
+    ? `/api/comic-series/${seriesId}/issues`
+    : `/api/comic-issues`;
+  const { data, error, isValidating } = useApiData<ComicIssuesApiType>(
+    requestUrl,
+    {
+      keepPreviousData: true,
+      fallbackData: undefined,
+    },
+  );
 
   const comicIssuesData = data;
 
@@ -53,7 +58,9 @@ export function ComicIssuesInfoTableWrapper({
       {error && <div className="text-center text-red-500">Failed to load </div>}
       <section className="flex flex-col items-center justify-center">
         {!isValidating && tableItems.length > 0 && (
-          <ComicIssuesInfoTable itemList={tableItems} />
+          <ComicIssuesInfoTable itemList={tableItems} onClickCallBack={(id) => {
+          router.push(`/comic-issues/${id}`);
+        }} />
         )}
         {!isValidating && tableItems.length == 0 && (
           <div className="w-100 text-center">(No data)</div>

@@ -10,7 +10,7 @@ export default async function ComicIssuesPage({ params }: PageProps) {
   const { seriesId } = await params;
   
   return (
-    <div className="container mx-auto p-2 font-[family-name:var(--font-geist-sans)]">
+    <div className="container mx-auto p-2 font-(family-name:--font-geist-sans)">
       <Navbar />
       <ComicIssuesInfoTableWrapper seriesId={seriesId} />
       <Footer />

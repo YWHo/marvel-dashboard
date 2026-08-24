@@ -4,11 +4,9 @@ import { ComicIssuesInfoTableWrapper } from "@/app/components/ComicIssuesInfoTab
 
 export default function ComicIssuePage() {
   return (
-    <div className="container mx-auto p-2 font-[family-name:var(--font-geist-sans)]">
-            <Navbar />
-            <ComicIssuesInfoTableWrapper />
-            <div>Comic Issues </div>
-            <Footer />
+    <div className="container mx-auto p-2 font-(family-name:--font-geist-sans)">
+      <Navbar />
+      <ComicIssuesInfoTableWrapper />
       <Footer />
     </div>
   );
