@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Spinner } from "@/app/components/Spiner";
 import { useApiData } from "@/app/hooks/useApiData";
 
@@ -16,13 +15,13 @@ type ComicIssuesType = {
 };
 
 type ComicIssuesInfoTableWrapperProps = {
-  seriesId: string;
+  seriesId?: string;
 };
 
 export function ComicIssuesInfoTableWrapper({
   seriesId,
 }: ComicIssuesInfoTableWrapperProps) {
-  const requestUrl = `/api/comic-series/${seriesId}/issues`;
+  const requestUrl = seriesId? `/api/comic-series/${seriesId}/issues` : `/api/comic-issues`;
   const { data, error, isValidating } = useApiData<ComicIssuesType>(requestUrl, {
     keepPreviousData: true,
     fallbackData: undefined,
@@ -39,7 +38,7 @@ export function ComicIssuesInfoTableWrapper({
       : undefined;
 
   return (
-    <div className="relative min-h-[100px]: max-w-screen-lg mt-8">
+    <div className="relative min-h-[100px]: max-w-5xl mt-8">
       <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
         The Marvel comic issues
       </h1>
@@ -47,7 +46,7 @@ export function ComicIssuesInfoTableWrapper({
         <h2 className="text-1xl text-center font-serif">{seriesName}</h2>
       )}
       {isValidating && (
-        <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
           <Spinner />
         </div>
       )}
