@@ -1,11 +1,9 @@
 "use client";
 
 import React from "react";
-import useSWR from "swr";
 import Image from "next/image";
 import { getImageURLFromThumbnail } from "@/app/lib/helpers";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { useApiData } from "@/app/hooks/useApiData";
 
 type Props = {
   id: string;
@@ -13,7 +11,7 @@ type Props = {
 
 export function HeroPotrait({ id }: Props) {
   const requestUrl = `/api/characters/${id}`;
-  const { data, error, isLoading } = useSWR(requestUrl, fetcher);
+  const { data, error, isLoading } = useApiData(requestUrl);
 
   if (error) return <div className="text-center text-red-500">failed to get the Hero</div>;
   if (isLoading) return <div className="text-center text-green-400">{`loading...a Hero's Potrait`}</div>;

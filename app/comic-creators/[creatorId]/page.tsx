@@ -1,20 +1,20 @@
 import { Navbar } from "@/app/components/Navbar";
 import { Footer } from "@/app/components/Footer";
 import { ComicIssuesInfoTableWrapper } from "@/app/components/ComicIssuesInfoTableWrapper";
-import { ComicSeriesDetails } from "@/app/components/ComicSeriesDetails";
+import { ComicCreatorDetails } from "@/app/components/ComicCreatorDetails";
 
 type PageProps = {
-  params: Promise<{ seriesId: string }>;
+  params: Promise<{ creatorId: string }>;
 };
 
-export default async function ComicSeriesToIssuesPage({ params }: PageProps) {
-  const { seriesId } = await params;
+export default async function ComicCreatorsToIssuPage({ params }: PageProps) {
+  const { creatorId } = await params;
 
   return (
     <div className="container mx-auto p-2 font-(family-name:--font-geist-sans)">
       <Navbar />
-      <ComicSeriesDetails seriesId={seriesId} />
-      <ComicIssuesInfoTableWrapper seriesId={seriesId} />
+      <ComicCreatorDetails creatorId={creatorId} />
+      <ComicIssuesInfoTableWrapper creatorId={creatorId} />
       <Footer />
     </div>
   );

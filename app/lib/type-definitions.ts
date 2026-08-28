@@ -38,6 +38,6 @@ export type MarvelResponseDataResultThumbnailType = {
   extension?: string;
 };
 
-export type OnClickCallbackType = (id: number | undefined) => void;
+export type OnClickCallbackType = (id: string | number | undefined) => void;
 
 export type SortOrder = "ascending" | "descending";

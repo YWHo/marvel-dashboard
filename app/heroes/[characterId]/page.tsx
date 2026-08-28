@@ -13,7 +13,7 @@ export default async function HeroDetail({ params }: Props) {
   const { characterId } = await params;
 
   return (
-    <div className="container mx-auto mt-12 p-2 pb-10 font-[family-name:var(--font-geist-sans)]">
+    <div className="container mx-auto mt-12 p-2 pb-10 font-(family-name:--font-geist-sans)">
       <Navbar />
       <HeroPotrait id={characterId} />
       <section className="flex flex-col items-center justify-center">

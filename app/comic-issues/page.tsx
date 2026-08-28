@@ -1,12 +1,12 @@
 import { Navbar } from "@/app/components/Navbar";
-import { ComicSeriesInfoTableWrapper } from "@/app/components/ComicSeriesInfoTableWrapper";
 import { Footer } from "@/app/components/Footer";
+import { ComicIssuesInfoTableWrapper } from "@/app/components/ComicIssuesInfoTableWrapper";
 
-export default function ComicSeriesPage() {
+export default function ComicIssuePage() {
   return (
     <div className="container mx-auto p-2 font-(family-name:--font-geist-sans)">
       <Navbar />
-      <ComicSeriesInfoTableWrapper />
+      <ComicIssuesInfoTableWrapper />
       <Footer />
     </div>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import useSWR from "swr";
 import clsx from "clsx";
 import type {
   InfoList,
@@ -16,11 +15,7 @@ import { SortButtons } from "@/app/components/SortButtons";
 import { Spinner } from "@/app/components/Spiner";
 import { DualDirectionButtons } from "@/app/components/DualDirectionButtons";
 import { mapToInfoList } from "@/app/lib/helpers";
-
-const fetcher = (url: string) => {
-  if (!url || url.length == 0) return null;
-  return fetch(url).then((res) => res.json());
-};
+import { useApiData } from "@/app/hooks/useApiData";
 
 type Props = {
   baseUrl: string;
@@ -67,7 +62,7 @@ export function InfoTable({
     ? `${baseUrl}?limit=${limit}&offset=${offset}${orderingRequest}${searchRequest}`
     : "";
 
-  const { data, error, isValidating } = useSWR(requestUrl, fetcher, {
+  const { data, error, isValidating } = useApiData<any>(requestUrl, {
     keepPreviousData: true,
     fallbackData: mockData,
   });

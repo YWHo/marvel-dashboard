@@ -6,9 +6,9 @@ type ReqParams = {
   params: Promise<{ seriesId: string }>;
 };
 
+// Get all issues in a series.
 export async function GET(req: NextRequest, { params }: ReqParams) {
   const { seriesId } = await params;
-  console.log('GET issues: seriesId: ', seriesId);
   const targetBaseUrl = `${baseURL}/v1/series/${seriesId}/issues`;
   const targetUrl = getTargetUrl(req.url, targetBaseUrl);
   const cacheKey = getServerCacheKey(req.url, targetBaseUrl);

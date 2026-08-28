@@ -1,33 +1,33 @@
 "use client";
 
 import clsx from "clsx";
-import type { ReactNode } from "react";
 import type { OnClickCallbackType } from "@/app/lib/type-definitions";
-import type { ComicIssueItemType } from "@/app/components/ComicIssueItemDetails";
+import type { ReactNode } from "react";
 
-type ComicIssuesInfoTableProps = {
-  className?: string;
-  onClickCallBack?: OnClickCallbackType;
-  itemList: ComicIssueItemType[];
+export type ComicCreatorsItemType = {
+  id: string;
+  name: string;
+  issueCount: number;
 };
 
-export function ComicIssuesInfoTable({
+type ComicCreatorsInfoTableProps = {
+  className?: string;
+  onClickCallBack?: OnClickCallbackType;
+  itemList: ComicCreatorsItemType[];
+};
+
+export function ComicCreatorsInfoTable({
   className,
   onClickCallBack,
   itemList = [],
-}: ComicIssuesInfoTableProps) {
-  if (!itemList || itemList.length === 0) {
-    return <div className="w-100 text-center">(No data)</div>;
-  }
+}: ComicCreatorsInfoTableProps) {
   return (
     <div className={clsx("relative min-h-[100px]: max-w-5xl mt-8", className)}>
       <table className="block w-full min-[600px]:table min-[600px]:table-fixed min-h-25 sm:w-150 md:w-175 lg:w-225 min-[600px]:[&_td:nth-child(3)]:text-right [&_td]:p-1.5 min-[600px]:[&_td]:p-2 min-[900px]:[&_td]:p-4 [&_th]:p-4 border-separate border-spacing-y-1">
         <colgroup>
           <col className="w-[8ch] pr-1 whitespace-nowrap" />
           <col className="w-auto" />
-          <col className="w-[6ch] pr-1" />
-          <col className="w-[10ch] pr-1" />
-          <col className="w-[10ch]" />
+          <col className="w-[11ch] pl-1 min-[600px]:text-right" />
         </colgroup>
         <thead className="hidden min-[600px]:table-header-group">
           <tr className={clsx("p-4 bg-gray-900 rounded", className)}>
@@ -37,21 +37,15 @@ export function ComicIssuesInfoTable({
             <th className="border-b border-gray-500 text-left" scope="col">
               Name
             </th>
-            <th className="border-b border-gray-500 text-left" scope="col">
-              Year Page
-            </th>
-            <th className="border-b border-gray-500 text-left" scope="col">
-              On Sale Date
-            </th>
-            <th className="border-b border-gray-500 text-left" scope="col">
-              Unlimited Date
+            <th className="border-b border-gray-500 text-right" scope="col">
+              Issue Count
             </th>
           </tr>
         </thead>
         <tbody className="block min-[600px]:table-row-group">
           {itemList.map((item, i) => (
-            <ComicIssuesItem
-              key={`${i}_${item.title.substring(5)}`}
+            <ComicCreatorsItem
+              key={`${i}_${item.name.substring(5)}`}
               {...item}
               onClickCallback={onClickCallBack}
             />
@@ -62,23 +56,18 @@ export function ComicIssuesInfoTable({
   );
 }
 
-type ComicIssueItemProps = ComicIssueItemType & {
+type ComicCreatorsItemProps = ComicCreatorsItemType & {
   className?: string;
   onClickCallback?: OnClickCallbackType;
 };
 
-function ComicIssuesItem({
+function ComicCreatorsItem({
   className,
   id,
-  title,
-  onSaleDate,
-  unlimitedDate,
-  yearPage,
+  name,
+  issueCount = 0,
   onClickCallback = () => {},
-}: ComicIssueItemProps) {
-  const onSaleDateStr = new Date(onSaleDate).toLocaleDateString();
-  const unlimitedDateStr = new Date(unlimitedDate).toLocaleDateString();
-
+}: ComicCreatorsItemProps) {
   return (
     <tr
       className={clsx(
@@ -87,25 +76,24 @@ function ComicIssuesItem({
       )}
       onClick={() => onClickCallback(id)}
     >
-      <ComicIssuesItemCell label="ID">{id}</ComicIssuesItemCell>
-      <ComicIssuesItemCell label="Title">{title}</ComicIssuesItemCell>
-      <ComicIssuesItemCell label="Year Page">{yearPage}</ComicIssuesItemCell>
-      <ComicIssuesItemCell label="On Sale Date">
-        {onSaleDateStr}
-      </ComicIssuesItemCell>
-      <ComicIssuesItemCell label="Unlimited Date">
-        {unlimitedDateStr}
-      </ComicIssuesItemCell>
+      <ComicCreatorsItemCell label="ID">{id}</ComicCreatorsItemCell>
+      <ComicCreatorsItemCell label="Name">{name}</ComicCreatorsItemCell>
+      <ComicCreatorsItemCell label="IssueCount">
+        {issueCount}
+      </ComicCreatorsItemCell>
     </tr>
   );
 }
 
-type ComicIssuesItemCellProps = {
+type ComicCreatorsItemCellProps = {
   children: ReactNode;
   label: string;
 };
 
-function ComicIssuesItemCell({ children, label }: ComicIssuesItemCellProps) {
+function ComicCreatorsItemCell({
+  children,
+  label,
+}: ComicCreatorsItemCellProps) {
   return (
     <td className="min-[600px]:border-b min-[600px]:border-gray-500 block min-[600px]:table-cell">
       <div className="grid min-w-0 grid-cols-1 min-[350px]:grid-cols-[11ch_minmax(0,1fr)] gap-1 min-[350px]:gap-x-2  min-[600px]:block">
