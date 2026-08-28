@@ -30,7 +30,7 @@ export function ComicCreatorsInfoTableWrapper() {
   const tableItems = data?.items && !error ? data.items : [];
 
   return (
-    <div className="relative min-h-[100px]: max-w-5xl mt-8">
+    <div className="relative min-h-[100px]: max-w-5xl mt-14">
       <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
         The Marvel comic creators
       </h1>
