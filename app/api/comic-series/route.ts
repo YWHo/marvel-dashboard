@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { baseURL } from "@/app/lib/constants";
 import { fetchData, getServerCacheKey, getTargetUrl } from "@/app/lib/helpers";
 
-// GET a list of series
+// List all series with pagination.
 export async function GET(req: NextRequest) {
   const targetBaseUrl = `${baseURL}/v1/series`;
   const targetUrl = getTargetUrl(req.url, targetBaseUrl);

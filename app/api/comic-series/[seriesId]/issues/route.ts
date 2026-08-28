@@ -6,7 +6,7 @@ type ReqParams = {
   params: Promise<{ seriesId: string }>;
 };
 
-// GET the issues of a series
+// Get all issues in a series.
 export async function GET(req: NextRequest, { params }: ReqParams) {
   const { seriesId } = await params;
   const targetBaseUrl = `${baseURL}/v1/series/${seriesId}/issues`;

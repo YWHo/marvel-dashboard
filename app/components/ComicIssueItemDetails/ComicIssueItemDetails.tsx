@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export type ComicIssueItemType = {
-  id: number;
+  id: string;
   title: string;
   issueNumber: string;
   detailUrl: string;
@@ -22,7 +22,7 @@ export type ComicIssueItemDetailsType = ComicIssueItemType & {
   modified: string;
   pageCount: number;
   creators: {
-    id: number;
+    id: string;
     name: string;
     role: string;
   }[];

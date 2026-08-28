@@ -3,16 +3,16 @@ import { Footer } from "@/app/components/Footer";
 import { ComicIssuesInfoTableWrapper } from "@/app/components/ComicIssuesInfoTableWrapper";
 
 type PageProps = {
-  params: Promise<{ seriesId: string }>;
+  params: Promise<{ creatorId: string }>;
 };
 
-export default async function ComicSeriesToIssuesPage({ params }: PageProps) {
-  const { seriesId } = await params;
+export default async function ComicCreatorsToIssuPage({ params }: PageProps) {
+  const { creatorId } = await params;
   
   return (
     <div className="container mx-auto p-2 font-(family-name:--font-geist-sans)">
       <Navbar />
-      <ComicIssuesInfoTableWrapper seriesId={seriesId} />
+      <ComicIssuesInfoTableWrapper creatorId={creatorId} />
       <Footer />
     </div>
   );

@@ -3,13 +3,13 @@ import { baseURL } from "@/app/lib/constants";
 import { fetchData, getServerCacheKey, getTargetUrl } from "@/app/lib/helpers";
 
 type ReqParams = {
-  params: Promise<{ issueId: string }>;
+  params: Promise<{ creatorId: string }>;
 };
 
-// Get a single issue by ID.
+// Get creator details by ID.
 export async function GET(req: NextRequest, { params }: ReqParams) {
-  const { issueId } = await params;
-  const targetBaseUrl = `${baseURL}/v1/issues/${issueId}`;
+  const { creatorId } = await params;
+  const targetBaseUrl = `${baseURL}/v1/creators/${creatorId}`;
   const targetUrl = getTargetUrl(req.url, targetBaseUrl);
   const cacheKey = getServerCacheKey(req.url, targetBaseUrl);
   const { data, error, status } = await fetchData(

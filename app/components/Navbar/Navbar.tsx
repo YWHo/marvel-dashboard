@@ -8,7 +8,7 @@ export function Navbar() {
         {/* Left-aligned "Home" link */}
         <div>
           <Link
-            href="/comic-series"
+            href="/"
             className="text-sm md:text-xl font-semibold hover:text-gray-300 hover:underline"
           >
             Home
@@ -18,16 +18,22 @@ export function Navbar() {
         {/* Centered links */}
         <div className="flex-1 flex justify-center pl-4 space-x-1 md:space-x-6">
           <a
+            href="/comic-issues"
+            className="text-sm md:text-lg hover:text-gray-300 hover:underline"
+          >
+            Issues
+          </a>
+          <a
             href="/comic-series"
             className="text-sm md:text-lg hover:text-gray-300 hover:underline"
           >
             Series
           </a>
           <a
-            href="/comic-issues"
+            href="/comic-creators"
             className="text-sm md:text-lg hover:text-gray-300 hover:underline"
           >
-            Issues
+            Creators
           </a>
         </div>
       </div>

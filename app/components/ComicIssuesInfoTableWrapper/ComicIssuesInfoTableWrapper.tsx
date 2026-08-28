@@ -8,22 +8,26 @@ import { ComicIssuesInfoTable } from "@/app/components/ComicIssuesInfoTable";
 import type { ComicIssueItemType } from "@/app/components/ComicIssueItemDetails";
 
 type ComicIssuesApiType = {
-  series_id: number;
+  series_id: string;
   series_name: string;
   items: ComicIssueItemType[];
 };
 
 type ComicIssuesInfoTableWrapperProps = {
+  creatorId?: string;
   seriesId?: string;
 };
 
 export function ComicIssuesInfoTableWrapper({
+  creatorId,
   seriesId,
 }: ComicIssuesInfoTableWrapperProps) {
   const router = useRouter();
-  const requestUrl = seriesId
-    ? `/api/comic-series/${seriesId}/issues`
-    : `/api/comic-issues`;
+  const requestUrl = creatorId
+    ? `/api/comic-creators/${creatorId}/issues`
+    : seriesId
+      ? `/api/comic-series/${seriesId}/issues`
+      : `/api/comic-issues`;
   const { data, error, isValidating } = useApiData<ComicIssuesApiType>(
     requestUrl,
     {
@@ -32,15 +36,9 @@ export function ComicIssuesInfoTableWrapper({
     },
   );
 
-  const comicIssuesData = data;
+  const tableItems = data?.items && !error ? data.items : [];
 
-  const tableItems =
-    comicIssuesData?.items && !error ? comicIssuesData.items : [];
-
-  const seriesName =
-    comicIssuesData?.series_name && !error
-      ? comicIssuesData.series_name
-      : undefined;
+  const seriesName = data?.series_name && !error ? data.series_name : undefined;
 
   return (
     <div className="relative min-h-[100px]: max-w-5xl mt-8">
@@ -58,9 +56,12 @@ export function ComicIssuesInfoTableWrapper({
       {error && <div className="text-center text-red-500">Failed to load </div>}
       <section className="flex flex-col items-center justify-center">
         {!isValidating && tableItems.length > 0 && (
-          <ComicIssuesInfoTable itemList={tableItems} onClickCallBack={(id) => {
-          router.push(`/comic-issues/${id}`);
-        }} />
+          <ComicIssuesInfoTable
+            itemList={tableItems}
+            onClickCallBack={(id) => {
+              router.push(`/comic-issues/${id}`);
+            }}
+          />
         )}
         {!isValidating && tableItems.length == 0 && (
           <div className="w-100 text-center">(No data)</div>
