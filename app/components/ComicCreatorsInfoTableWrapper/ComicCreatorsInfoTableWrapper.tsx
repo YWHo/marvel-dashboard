@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
 import { useApiData } from "@/app/hooks/useApiData";
-import { type ComicCreatorsItemType, ComicCreatorsInfoTable } from "@/app/components/ComicCreatorsInfoTable";
-
+import {
+  type ComicCreatorsItemType,
+  ComicCreatorsInfoTable,
+} from "@/app/components/ComicCreatorsInfoTable";
 
 type ComicCreatorsApiType = {
   total: number;
@@ -16,6 +18,7 @@ type ComicCreatorsApiType = {
 
 export function ComicCreatorsInfoTableWrapper() {
   const router = useRouter();
+
   const requestUrl = "/api/comic-creators";
   const { data, error, isValidating } = useApiData<ComicCreatorsApiType>(
     requestUrl,
@@ -24,9 +27,7 @@ export function ComicCreatorsInfoTableWrapper() {
       fallbackData: undefined,
     },
   );
-
   const tableItems = data?.items && !error ? data.items : [];
-  console.log('wrapper tableItems:\n', tableItems);
 
   return (
     <div className="relative min-h-[100px]: max-w-5xl mt-8">
