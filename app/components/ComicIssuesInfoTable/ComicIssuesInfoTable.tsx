@@ -26,8 +26,8 @@ export function ComicIssuesInfoTable({
           <col className="w-[8ch] pr-1 whitespace-nowrap" />
           <col className="w-auto" />
           <col className="w-[6ch] pr-1" />
-          <col className="w-[10ch] pr-1" />
-          <col className="w-[10ch]" />
+          <col className="w-[11ch] pr-1" />
+          <col className="w-[11ch]" />
         </colgroup>
         <thead className="hidden min-[600px]:table-header-group">
           <tr className={clsx("p-4 bg-gray-900 rounded", className)}>

@@ -1,0 +1,84 @@
+/** @jest-environment node */
+
+import { faker } from "@faker-js/faker";
+import { NextRequest } from "next/server";
+import { GET } from "./route";
+import {
+  fetchData,
+  getServerCacheKey,
+  getTargetUrl,
+} from "@/app/lib/helpers";
+
+jest.mock("@/app/lib/helpers", () => ({
+  fetchData: jest.fn(),
+  getServerCacheKey: jest.fn(),
+  getTargetUrl: jest.fn(),
+}));
+
+const mockedFetchData = jest.mocked(fetchData);
+const mockedGetServerCacheKey = jest.mocked(getServerCacheKey);
+const mockedGetTargetUrl = jest.mocked(getTargetUrl);
+
+describe("GET /api/comic-series/[seriesId]/issues", () => {
+  const seriesId = faker.string.uuid();
+  const targetUrl = `https://example.test/v1/series/${seriesId}/issues`;
+
+  beforeEach(() => {
+    mockedGetTargetUrl.mockReturnValue(targetUrl);
+    mockedGetServerCacheKey.mockReturnValue("series-issues-cache-key");
+  });
+
+  it("returns issues belonging to the series", async () => {
+    const payload = {
+      series_id: seriesId,
+      series_name: faker.commerce.productName(),
+      items: Array.from({ length: 2 }, () => ({
+        id: faker.string.uuid(),
+        title: faker.commerce.productName(),
+        issueNumber: faker.number.int({ min: 1, max: 100 }).toString(),
+        detailUrl: faker.internet.url(),
+        seriesId: faker.number.int({ min: 1, max: 10000 }),
+        seriesName: faker.commerce.productName(),
+        onSaleDate: faker.date.past().toISOString(),
+        unlimitedDate: faker.date.recent().toISOString(),
+        yearPage: faker.date.past().getFullYear().toString(),
+      })),
+    };
+    mockedFetchData.mockResolvedValue({ data: payload });
+    const request = new NextRequest(
+      `http://localhost/api/comic-series/${seriesId}/issues`,
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ seriesId }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual(payload);
+    expect(mockedGetTargetUrl).toHaveBeenCalledWith(
+      request.url,
+      expect.stringContaining(`/v1/series/${seriesId}/issues`),
+    );
+    expect(mockedFetchData).toHaveBeenCalledWith(
+      targetUrl,
+      request.headers,
+      "series-issues-cache-key",
+    );
+  });
+
+  it("forwards upstream API errors", async () => {
+    const status = faker.helpers.arrayElement([404, 502, 503]);
+    const error = faker.lorem.sentence();
+    mockedFetchData.mockResolvedValue({ error, status });
+    const request = new NextRequest(
+      `http://localhost/api/comic-series/${seriesId}/issues`,
+    );
+
+    const response = await GET(request, {
+      params: Promise.resolve({ seriesId }),
+    });
+
+    expect(response.status).toBe(status);
+    await expect(response.json()).resolves.toEqual({ message: error });
+  });
+});

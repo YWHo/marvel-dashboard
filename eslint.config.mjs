@@ -13,8 +13,11 @@ export default defineConfig([
   },
   globalIgnores([
     ".next/**",
+    "coverage/**",
     "out/**",
     "build/**",
+    "storybook-static/**",
+    "public/mockServiceWorker.js",
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
