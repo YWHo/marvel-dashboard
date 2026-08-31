@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import {
-  ComicIssuesDetails,
+  ComicIssueItemDetails,
   type ComicIssueItemDetailsType,
 } from "./ComicIssueItemDetails";
 
@@ -28,9 +28,9 @@ const issue: ComicIssueItemDetailsType = {
   },
 };
 
-describe("ComicIssuesDetails", () => {
+describe("ComicIssueItemDetails", () => {
   it("renders issue metadata, links, cover, and creator credits", () => {
-    render(<ComicIssuesDetails itemDetails={issue} />);
+    render(<ComicIssueItemDetails itemDetails={issue} />);
 
     expect(
       screen.getByRole("heading", { name: "Amazing Fantasy #15" }),
@@ -57,7 +57,7 @@ describe("ComicIssuesDetails", () => {
 
   it("renders fallbacks when optional issue information is unavailable", () => {
     render(
-      <ComicIssuesDetails
+      <ComicIssueItemDetails
         itemDetails={{
           ...issue,
           detailUrl: "",

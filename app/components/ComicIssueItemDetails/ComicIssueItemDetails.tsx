@@ -37,7 +37,7 @@ type ComicIssueItemDetailsProps = {
   itemDetails: ComicIssueItemDetailsType;
 };
 
-export function ComicIssuesDetails({
+export function ComicIssueItemDetails({
   className,
   itemDetails,
 }: ComicIssueItemDetailsProps) {

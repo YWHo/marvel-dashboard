@@ -2,7 +2,7 @@
 
 import { Spinner } from "@/app/components/Spiner";
 import { useApiData } from "@/app/hooks/useApiData";
-import { type ComicIssueItemDetailsType, ComicIssuesDetails } from "@/app/components/ComicIssueItemDetails";
+import { type ComicIssueItemDetailsType, ComicIssueItemDetails } from "@/app/components/ComicIssueItemDetails";
 
 type ComicIssueItemDetailsWrapperProps = {
   issueId?: string;
@@ -40,7 +40,7 @@ export function ComicIssueItemDetailsWrapper({
       )}
       <section className="flex flex-col items-center justify-center">
         {!isValidating && detailsObj.id && (
-          <ComicIssuesDetails itemDetails={detailsObj as ComicIssueItemDetailsType} />
+          <ComicIssueItemDetails itemDetails={detailsObj as ComicIssueItemDetailsType} />
         )}
         {!isValidating && !error && !detailsObj.id && (
           <div className="w-full rounded-xl border border-gray-700 bg-gray-900 p-6 text-center text-gray-300">
