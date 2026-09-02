@@ -11,6 +11,7 @@ function LandingPage() {
           alt="Centered Landing Image"
           width={350}
           height={350}
+          loading="eager"
           className="object-contain rounded" // Ensures the image scales down within the bounds
         />
       </div>
