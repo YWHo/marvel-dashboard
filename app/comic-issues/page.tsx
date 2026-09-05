@@ -6,7 +6,7 @@ export default function ComicIssuePage() {
   return (
     <div className="container mx-auto p-2 font-(family-name:--font-geist-sans)">
       <Navbar />
-      <ComicIssuesInfoTableWrapper />
+      <ComicIssuesInfoTableWrapper className="mt-14" showSearchBar />
       <Footer />
     </div>
   );

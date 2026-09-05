@@ -37,6 +37,21 @@ test("renders the Issues page with issue data", async ({ page }) => {
       },
     ],
   });
+  await mockJson(page, "/api/comic-issues/search", {
+    items: [
+      {
+        id: "issue-202",
+        title: "Spider-Man #1",
+        issueNumber: "1",
+        detailUrl: "https://example.test/issues/issue-202",
+        seriesId: 2002,
+        seriesName: "Spider-Man",
+        onSaleDate: "1990-01-01T12:00:00.000Z",
+        unlimitedDate: "2008-01-15T12:00:00.000Z",
+        yearPage: "1990",
+      },
+    ],
+  });
 
   await page.goto("/comic-issues");
 
@@ -50,6 +65,22 @@ test("renders the Issues page with issue data", async ({ page }) => {
     "aria-current",
     "page",
   );
+
+  await page
+    .getByRole("searchbox", { name: "Search comic issues by title" })
+    .fill("Spider Man");
+  await page.getByRole("button", { name: "Search" }).click();
+
+  await expect(page.getByText("Spider-Man #1")).toBeVisible();
+  await expect(page.getByText("Amazing Fantasy #15")).not.toBeVisible();
+
+  await page
+    .getByRole("searchbox", { name: "Search comic issues by title" })
+    .fill("");
+
+  await expect(page.getByText("Amazing Fantasy #15")).toBeVisible();
+  await expect(page.getByText("Spider-Man #1")).not.toBeVisible();
+  await expect(page.getByRole("button", { name: "Search" })).toBeDisabled();
 });
 
 test("renders the Series page with series data", async ({ page }) => {

@@ -106,6 +106,50 @@ describe("ComicIssuesInfoTableWrapper", () => {
     });
   });
 
+  it("loads title search results and restores all issues when cleared", async () => {
+    const user = userEvent.setup();
+    mockedUseApiData.mockReturnValue({
+      data: { ...apiData, items: [] },
+      error: undefined,
+      isValidating: false,
+    } as ReturnType<typeof useApiData>);
+
+    render(<ComicIssuesInfoTableWrapper showSearchBar />);
+
+    const searchInput = screen.getByRole("searchbox", {
+      name: "Search comic issues by title",
+    });
+    await user.type(searchInput, "  Spider Man  ");
+    await user.click(screen.getByRole("button", { name: "Search" }));
+
+    expect(mockedUseApiData).toHaveBeenLastCalledWith(
+      "/api/comic-issues/search?q=Spider%20Man",
+      {
+        keepPreviousData: true,
+        fallbackData: undefined,
+      },
+    );
+
+    await user.clear(searchInput);
+
+    expect(mockedUseApiData).toHaveBeenLastCalledWith("/api/comic-issues", {
+      keepPreviousData: true,
+      fallbackData: undefined,
+    });
+  });
+
+  it("does not show search controls unless requested", () => {
+    mockedUseApiData.mockReturnValue({
+      data: { ...apiData, items: [] },
+      error: undefined,
+      isValidating: false,
+    } as ReturnType<typeof useApiData>);
+
+    render(<ComicIssuesInfoTableWrapper />);
+
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+  });
+
   it("shows loading and error feedback without stale issue rows", () => {
     mockedUseApiData.mockReturnValue({
       data: apiData,
