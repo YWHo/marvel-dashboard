@@ -20,7 +20,7 @@ export function ComicIssuesInfoTable({
     return <div className="w-100 text-center">(No data)</div>;
   }
   return (
-    <div className={clsx("relative min-h-[100px]: max-w-5xl mt-8", className)}>
+    <div className={clsx("relative min-h-[100px]: max-w-5xl mt-2", className)}>
       <table className="block w-full min-[600px]:table min-[600px]:table-fixed min-h-25 sm:w-150 md:w-175 lg:w-225 min-[600px]:[&_td:nth-child(3)]:text-right [&_td]:p-1.5 min-[600px]:[&_td]:p-2 min-[900px]:[&_td]:p-4 [&_th]:p-4 border-separate border-spacing-y-1">
         <colgroup>
           <col className="w-[8ch] pr-1 whitespace-nowrap" />

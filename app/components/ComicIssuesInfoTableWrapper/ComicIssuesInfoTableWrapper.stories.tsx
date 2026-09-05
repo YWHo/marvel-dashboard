@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import { delay, http, HttpResponse } from "msw";
 import { SWRConfig } from "swr";
 import { ComicIssuesInfoTableWrapper } from "./ComicIssuesInfoTableWrapper";
@@ -115,6 +115,39 @@ export const IssuesBySeries: Story = {
       await canvas.findByRole("heading", { name: "Amazing Fantasy" }),
     ).toBeInTheDocument();
     await expect(canvas.getByText("Amazing Fantasy #15")).toBeInTheDocument();
+  },
+};
+
+export const SearchIssues: Story = {
+  args: {
+    showSearchBar: true,
+  },
+  parameters: {
+    msw: [
+      http.get("/api/comic-issues", () =>
+        HttpResponse.json({ items: issueItems }),
+      ),
+      http.get("/api/comic-issues/search", ({ request }) => {
+        const query = new URL(request.url).searchParams.get("q");
+
+        return HttpResponse.json({
+          items: query === "Amazing Fantasy" ? [issueItems[0]] : [],
+        });
+      }),
+    ],
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+    const searchInput = await canvas.findByRole("searchbox", {
+      name: "Search comic issues by title",
+    });
+
+    await userEvent.type(searchInput, "Amazing Fantasy");
+    await userEvent.click(canvas.getByRole("button", { name: "Search" }));
+
+    await expect(await canvas.findByText("Amazing Fantasy #15"))
+      .toBeInTheDocument();
+    await expect(canvas.queryByText("The Avengers #1")).not.toBeInTheDocument();
   },
 };
 

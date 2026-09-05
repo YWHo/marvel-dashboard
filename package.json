@@ -10,6 +10,8 @@
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --runInBand",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build"
   },
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@faker-js/faker": "^10.6.0",
     "@next/eslint-plugin-next": "^16.3.1",
+    "@playwright/test": "^1.62.1",
     "@storybook/addon-a11y": "^10.5.10",
     "@storybook/addon-docs": "^10.5.10",
     "@storybook/nextjs-vite": "^10.5.10",
