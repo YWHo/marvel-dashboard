@@ -4,7 +4,7 @@ import {
   useId,
   useState,
   type ChangeEvent,
-  type FormEvent,
+  type SubmitEvent
 } from "react";
 import clsx from "clsx";
 
@@ -37,7 +37,7 @@ export function SearchBox({
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (normalizedSearchTerm) {
