@@ -41,17 +41,16 @@ export function ComicSeriesInfoTableWrapper() {
   return (
     <div className="relative mt-14 min-h-[100px] max-w-5xl">
       <ListToolbar headingRef={headingRef} title="The Marvel comic series">
-        {!isPending && !error && (
-          <PaginationControls
-            hasNextPage={data?.has_next ?? false}
-            isFetching={isPageFetching || isPlaceholderData}
-            itemCount={tableItems.length}
-            limit={COMIC_LIST_PAGE_LIMIT}
-            offset={offset}
-            onPageChange={handlePageChange}
-            total={data?.total ?? 0}
-          />
-        )}
+        <PaginationControls
+          hasNextPage={data?.has_next ?? false}
+          isFetching={isPending || isPageFetching || isPlaceholderData}
+          isUnavailable={Boolean(error)}
+          itemCount={tableItems.length}
+          limit={COMIC_LIST_PAGE_LIMIT}
+          offset={offset}
+          onPageChange={handlePageChange}
+          total={data?.total ?? 0}
+        />
       </ListToolbar>
       {isPending && (
         <div className="flex min-h-40 items-start justify-center pt-10">

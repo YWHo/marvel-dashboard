@@ -68,4 +68,23 @@ describe("PaginationControls", () => {
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
     expect(screen.getByText("Loading page…")).toBeInTheDocument();
   });
+
+  it("disables both controls when pagination is unavailable", () => {
+    render(
+      <PaginationControls
+        hasNextPage
+        isFetching={false}
+        isUnavailable
+        itemCount={0}
+        limit={20}
+        offset={20}
+        onPageChange={jest.fn()}
+        total={45}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    expect(screen.getByText("Pagination unavailable")).toBeInTheDocument();
+  });
 });

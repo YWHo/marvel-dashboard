@@ -117,6 +117,9 @@ describe("ComicSeriesInfoTableWrapper", () => {
     render(<ComicSeriesInfoTableWrapper />);
 
     expect(screen.getByText("Loading comic series")).toBeInTheDocument();
+    expect(screen.getByText("Loading page…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   });
 
   it("shows an error without rendering stale series rows", () => {
@@ -137,6 +140,9 @@ describe("ComicSeriesInfoTableWrapper", () => {
     render(<ComicSeriesInfoTableWrapper />);
 
     expect(screen.getByText("Failed to load")).toBeInTheDocument();
+    expect(screen.getByText("Pagination unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
     expect(screen.queryByText("Stale Series")).not.toBeInTheDocument();
   });
 });

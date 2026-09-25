@@ -110,9 +110,14 @@ export const Loading: Story = {
     ],
   },
   async play({ canvasElement }) {
+    const canvas = within(canvasElement);
     await expect(
       canvasElement.querySelector(".animate-spin"),
     ).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: "Previous" }))
+      .toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "Next" })).toBeDisabled();
+    await expect(canvas.getByText("Loading page…")).toBeInTheDocument();
   },
 };
 
@@ -131,6 +136,8 @@ export const Error: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByText("Failed to load")).toBeInTheDocument();
+    await expect(canvas.getByText("Pagination unavailable"))
+      .toBeInTheDocument();
     await expect(canvas.getAllByRole("row")).toHaveLength(1);
   },
 };

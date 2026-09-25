@@ -127,6 +127,21 @@ describe("ComicCreatorsInfoTableWrapper", () => {
 
   it("shows loading and error feedback without stale creator rows", () => {
     mockedUseApiQuery.mockReturnValue({
+      data: undefined,
+      error: null,
+      isFetching: false,
+      isPending: true,
+      isPlaceholderData: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
+
+    const { rerender } = render(<ComicCreatorsInfoTableWrapper />);
+
+    expect(screen.getByText("Loading creators")).toBeInTheDocument();
+    expect(screen.getByText("Loading page…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+
+    mockedUseApiQuery.mockReturnValue({
       data: {
         total: 1,
         limit: 20,
@@ -136,14 +151,13 @@ describe("ComicCreatorsInfoTableWrapper", () => {
       },
       error: new Error("API unavailable"),
       isFetching: false,
-      isPending: true,
+      isPending: false,
       isPlaceholderData: false,
     } as unknown as ReturnType<typeof useApiQuery>);
+    rerender(<ComicCreatorsInfoTableWrapper />);
 
-    render(<ComicCreatorsInfoTableWrapper />);
-
-    expect(screen.getByText("Loading creators")).toBeInTheDocument();
     expect(screen.getByText("Failed to load")).toBeInTheDocument();
+    expect(screen.getByText("Pagination unavailable")).toBeInTheDocument();
     expect(screen.queryByText("Stale Creator")).not.toBeInTheDocument();
   });
 });
