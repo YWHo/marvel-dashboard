@@ -1,22 +1,23 @@
 import { render, screen } from "@testing-library/react";
 import { ComicSeriesDetails } from "./ComicSeriesDetails";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicSeriesKeys } from "@/app/lib/queryKeys";
 
-jest.mock("@/app/hooks/useApiData", () => ({
-  useApiData: jest.fn(),
+jest.mock("@/app/hooks/useApiQuery", () => ({
+  useApiQuery: jest.fn(),
 }));
 
 jest.mock("@/app/components/Spiner", () => ({
   Spinner: () => <div>Loading series</div>,
 }));
 
-const mockedUseApiData = jest.mocked(useApiData);
+const mockedUseApiQuery = jest.mocked(useApiQuery);
 
 describe("ComicSeriesDetails", () => {
   it("renders series metadata and its publication range", () => {
     const firstIssueDate = "1963-03-01T12:00:00.000Z";
     const lastIssueDate = "2025-07-16T12:00:00.000Z";
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         seriesId: "series-101",
         seriesName: "The Amazing Spider-Man",
@@ -24,16 +25,16 @@ describe("ComicSeriesDetails", () => {
         firstIssueDate,
         lastIssueDate,
       },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicSeriesDetails seriesId="series-101" />);
 
-    expect(mockedUseApiData).toHaveBeenCalledWith(
-      "/api/comic-series/series-101",
-      { keepPreviousData: true, fallbackData: undefined },
-    );
+    expect(mockedUseApiQuery).toHaveBeenCalledWith({
+      queryKey: comicSeriesKeys.detail("series-101"),
+      requestUrl: "/api/comic-series/series-101",
+    });
     expect(
       screen.getByRole("heading", { name: "The Amazing Spider-Man" }),
     ).toBeInTheDocument();
@@ -46,7 +47,7 @@ describe("ComicSeriesDetails", () => {
   });
 
   it("uses singular issue wording for a one-issue series", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         seriesId: "series-202",
         seriesName: "Marvel One-Shot",
@@ -54,9 +55,9 @@ describe("ComicSeriesDetails", () => {
         firstIssueDate: "2024-01-15T12:00:00.000Z",
         lastIssueDate: "2024-01-15T12:00:00.000Z",
       },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicSeriesDetails seriesId="series-202" />);
 
@@ -65,7 +66,7 @@ describe("ComicSeriesDetails", () => {
   });
 
   it("shows unavailable publication dates for invalid API values", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         seriesId: "series-303",
         seriesName: "Unknown Publication Run",
@@ -73,9 +74,9 @@ describe("ComicSeriesDetails", () => {
         firstIssueDate: "invalid-date",
         lastIssueDate: "",
       },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicSeriesDetails seriesId="series-303" />);
 
@@ -84,11 +85,11 @@ describe("ComicSeriesDetails", () => {
   });
 
   it("renders the loading state", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: undefined,
-      error: undefined,
-      isValidating: true,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: true,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicSeriesDetails seriesId="series-404" />);
 
@@ -97,11 +98,11 @@ describe("ComicSeriesDetails", () => {
   });
 
   it("renders error and empty-data states", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: undefined,
       error: new Error("API unavailable"),
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     const { rerender } = render(
       <ComicSeriesDetails seriesId="series-505" />,
@@ -111,11 +112,11 @@ describe("ComicSeriesDetails", () => {
       "Failed to load this series. Please try again later.",
     );
 
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: undefined,
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
     rerender(<ComicSeriesDetails seriesId="series-505" />);
 
     expect(

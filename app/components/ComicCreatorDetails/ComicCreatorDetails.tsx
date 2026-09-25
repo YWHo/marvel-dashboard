@@ -1,7 +1,8 @@
 "use client";
 
 import { Spinner } from "@/app/components/Spiner";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicCreatorKeys } from "@/app/lib/queryKeys";
 
 type ComicCreatorDetailsApiType = {
   id: string;
@@ -19,17 +20,14 @@ type ComicCreatorDetailsProps = {
 
 export function ComicCreatorDetails({ creatorId }: ComicCreatorDetailsProps) {
   const requestUrl = `/api/comic-creators/${creatorId}`;
-  const { data, error, isValidating } = useApiData<ComicCreatorDetailsApiType>(
+  const { data, error, isPending } = useApiQuery<ComicCreatorDetailsApiType>({
+    queryKey: comicCreatorKeys.detail(creatorId),
     requestUrl,
-    {
-      keepPreviousData: true,
-      fallbackData: undefined,
-    },
-  );
+  });
 
   const roles = data?.roles && !error ? data.roles : [];
 
-  if (isValidating) {
+  if (isPending) {
     return (
       <div className="mx-auto mt-14 flex min-h-48 w-full items-center justify-center rounded-xl border border-gray-700 bg-gray-900 sm:w-150 md:w-175 lg:w-225">
         <span className="sr-only">Loading creator details</span>

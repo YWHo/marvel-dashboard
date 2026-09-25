@@ -3,27 +3,33 @@
 import React from "react";
 import Image from "next/image";
 import { getImageURLFromThumbnail } from "@/app/lib/helpers";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { characterKeys } from "@/app/lib/queryKeys";
+import type { MarvelResponseDataResultType } from "@/app/lib/type-definitions";
 
 type Props = {
   id: string;
 };
 
+type CharacterApiResponse = {
+  data?: {
+    results?: MarvelResponseDataResultType[];
+  };
+};
+
 export function HeroPotrait({ id }: Props) {
   const requestUrl = `/api/characters/${id}`;
-  const { data, error, isLoading } = useApiData(requestUrl);
+  const { data, error, isPending } = useApiQuery<CharacterApiResponse>({
+    queryKey: characterKeys.detail(id),
+    requestUrl,
+  });
 
   if (error) return <div className="text-center text-red-500">failed to get the Hero</div>;
-  if (isLoading) return <div className="text-center text-green-400">{`loading...a Hero's Potrait`}</div>;
+  if (isPending) return <div className="text-center text-green-400">{`loading...a Hero's Potrait`}</div>;
 
-  let heroName = "",
-    imageUrl = "";
-  try {
-    heroName = data.data?.results?.[0]?.name || "";
-    imageUrl = getImageURLFromThumbnail(data.data?.results?.[0]?.thumbnail);
-  } catch (err) {
-    console.log("HeroPotrait: unexpected error:\n", err);
-  }
+  const hero = data?.data?.results?.[0];
+  const heroName = hero?.name ?? "";
+  const imageUrl = getImageURLFromThumbnail(hero?.thumbnail);
 
   return (
     <div className="min-h-[360px] mb-8">

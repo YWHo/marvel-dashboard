@@ -1,20 +1,21 @@
 import { render, screen } from "@testing-library/react";
 import { ComicCreatorDetails } from "./ComicCreatorDetails";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicCreatorKeys } from "@/app/lib/queryKeys";
 
-jest.mock("@/app/hooks/useApiData", () => ({
-  useApiData: jest.fn(),
+jest.mock("@/app/hooks/useApiQuery", () => ({
+  useApiQuery: jest.fn(),
 }));
 
 jest.mock("@/app/components/Spiner", () => ({
   Spinner: () => <div>Loading creator details</div>,
 }));
 
-const mockedUseApiData = jest.mocked(useApiData);
+const mockedUseApiQuery = jest.mocked(useApiQuery);
 
 describe("ComicCreatorDetails", () => {
   it("renders creator details and roles", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         id: "creator-123",
         name: "Stan Lee",
@@ -24,12 +25,16 @@ describe("ComicCreatorDetails", () => {
         ],
         totalIssues: 49,
       },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicCreatorDetails creatorId="creator-123" />);
 
+    expect(mockedUseApiQuery).toHaveBeenCalledWith({
+      queryKey: comicCreatorKeys.detail("creator-123"),
+      requestUrl: "/api/comic-creators/creator-123",
+    });
     expect(
       screen.getByRole("heading", { name: "Stan Lee" }),
     ).toBeInTheDocument();
@@ -42,16 +47,28 @@ describe("ComicCreatorDetails", () => {
   });
 
   it("renders an error state", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: undefined,
       error: new Error("API unavailable"),
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicCreatorDetails creatorId="creator-123" />);
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Failed to load this creator",
     );
+  });
+
+  it("renders the loading state", () => {
+    mockedUseApiQuery.mockReturnValue({
+      data: undefined,
+      error: null,
+      isPending: true,
+    } as unknown as ReturnType<typeof useApiQuery>);
+
+    render(<ComicCreatorDetails creatorId="creator-123" />);
+
+    expect(screen.getAllByText("Loading creator details")).toHaveLength(2);
   });
 });
