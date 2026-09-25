@@ -1,6 +1,9 @@
 "use client";
 
+import clsx from "clsx";
+
 type PaginationControlsProps = {
+  className?: string;
   hasNextPage: boolean;
   isFetching: boolean;
   itemCount: number;
@@ -11,6 +14,7 @@ type PaginationControlsProps = {
 };
 
 export function PaginationControls({
+  className,
   hasNextPage,
   isFetching,
   itemCount,
@@ -22,30 +26,38 @@ export function PaginationControls({
   const hasPreviousPage = offset > 0;
   const firstItem = itemCount > 0 ? offset + 1 : 0;
   const lastItem = itemCount > 0 ? offset + itemCount : 0;
+  const currentPage = Math.floor(offset / limit) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
     <nav
       aria-label="Pagination"
-      className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
+      className={clsx(
+        "grid w-full max-w-xl grid-cols-2 items-center gap-2 sm:flex sm:justify-center sm:gap-3",
+        className,
+      )}
     >
       <button
         type="button"
         disabled={isFetching || !hasPreviousPage}
         onClick={() => onPageChange(Math.max(0, offset - limit))}
-        className="min-w-32 rounded-lg border border-blue-400/60 bg-blue-900 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-500"
+        className="col-start-1 row-start-2 min-w-0 rounded-lg border border-blue-400/60 bg-blue-900 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-500 sm:order-1 sm:min-w-32"
       >
         Previous
       </button>
-      <p aria-live="polite" className="min-w-44 text-center text-sm text-gray-300">
+      <p
+        aria-live="polite"
+        className="col-span-2 col-start-1 row-start-1 text-center text-sm text-gray-300 sm:order-2 sm:min-w-56"
+      >
         {isFetching
           ? "Loading page…"
-          : `Showing ${firstItem}–${lastItem} of ${total}`}
+          : `Page ${currentPage} of ${totalPages} · ${firstItem}–${lastItem} of ${total}`}
       </p>
       <button
         type="button"
         disabled={isFetching || !hasNextPage}
         onClick={() => onPageChange(offset + limit)}
-        className="min-w-32 rounded-lg border border-blue-400/60 bg-blue-900 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-500"
+        className="col-start-2 row-start-2 min-w-0 rounded-lg border border-blue-400/60 bg-blue-900 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-500 sm:order-3 sm:min-w-32"
       >
         Next
       </button>

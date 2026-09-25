@@ -54,6 +54,11 @@ export const Populated: Story = {
       }),
     ).toBeInTheDocument();
     await expect(
+      within(canvas.getByRole("banner")).getByRole("navigation", {
+        name: "Pagination",
+      }),
+    ).toBeInTheDocument();
+    await expect(
       await canvas.findByText("The Amazing Spider-Man"),
     ).toBeInTheDocument();
     await expect(canvas.getAllByRole("row")).toHaveLength(4);

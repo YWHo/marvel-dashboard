@@ -49,6 +49,11 @@ export const Populated: Story = {
         name: "The Marvel comic creators",
       }),
     ).toBeInTheDocument();
+    await expect(
+      within(canvas.getByRole("banner")).getByRole("navigation", {
+        name: "Pagination",
+      }),
+    ).toBeInTheDocument();
     await expect(await canvas.findByText("Stan Lee")).toBeInTheDocument();
     await expect(canvas.getAllByRole("row")).toHaveLength(4);
   },

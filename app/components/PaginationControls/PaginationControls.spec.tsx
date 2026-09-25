@@ -20,7 +20,7 @@ describe("PaginationControls", () => {
     );
 
     expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
-    expect(screen.getByText("Showing 1–20 of 45")).toBeInTheDocument();
+    expect(screen.getByText("Page 1 of 3 · 1–20 of 45")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Next" }));
 
@@ -44,7 +44,7 @@ describe("PaginationControls", () => {
     );
 
     expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
-    expect(screen.getByText("Showing 41–45 of 45")).toBeInTheDocument();
+    expect(screen.getByText("Page 3 of 3 · 41–45 of 45")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Previous" }));
 

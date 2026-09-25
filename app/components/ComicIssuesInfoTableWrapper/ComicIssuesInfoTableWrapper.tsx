@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
 import { SearchBox } from "@/app/components/SearchBox";
+import { ListToolbar } from "@/app/components/ListToolbar";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
 import { useInfiniteComicIssues } from "@/app/hooks/useInfiniteComicIssues";
 import { useIntersectionObserver } from "@/app/hooks/useIntersectionObserver";
@@ -97,26 +98,27 @@ export function ComicIssuesInfoTableWrapper({
 
   return (
     <div className={clsx("relative min-h-[100px] max-w-5xl", className)}>
-      <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
-        The Marvel comic issues
-      </h1>
-      {seriesName && (
-        <h2 className="text-1xl text-center font-serif">{seriesName}</h2>
-      )}
-      {showSearchBar && (
-        <div className="mx-auto mt-6 flex max-w-md justify-center px-4">
+      <ListToolbar
+        sticky={isTopLevelList}
+        title="The Marvel comic issues"
+        className={clsx(!isTopLevelList && "border-b-0 bg-transparent shadow-none")}
+      >
+        {showSearchBar && (
           <SearchBox
             inputLabel="Search comic issues by title"
             placeholder="Search comic issues..."
             onSearchCallback={setSearchString}
           />
-        </div>
+        )}
+      </ListToolbar>
+      {seriesName && (
+        <h2 className="text-1xl text-center font-serif">{seriesName}</h2>
       )}
       {isPending && (
         <div
           role="status"
           aria-live="polite"
-          className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10"
+          className="flex min-h-40 items-start justify-center pt-10"
         >
           <Spinner />
           <span className="sr-only">Loading comic issues…</span>

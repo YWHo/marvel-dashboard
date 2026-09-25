@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -63,6 +63,11 @@ describe("ComicSeriesInfoTableWrapper", () => {
     });
     expect(
       screen.getByRole("heading", { name: "The Marvel comic series" }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("banner")).getByRole("navigation", {
+        name: "Pagination",
+      }),
     ).toBeInTheDocument();
 
     await user.click(screen.getByText("Uncanny X-Men"));

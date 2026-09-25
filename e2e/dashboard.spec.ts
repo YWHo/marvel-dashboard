@@ -25,6 +25,13 @@ test("renders the landing page and links to comic issues", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "The Marvel comic issues" }),
   ).toBeVisible();
+  const issuesToolbar = page.getByRole("banner");
+  await expect(issuesToolbar).toHaveCSS("position", "sticky");
+  await expect(
+    issuesToolbar.getByRole("searchbox", {
+      name: "Search comic issues by title",
+    }),
+  ).toBeVisible();
 });
 
 test("renders the Issues page with issue data", async ({ page }) => {
@@ -128,6 +135,9 @@ test("renders the Series page with series data", async ({ page }) => {
 
   const previousButton = page.getByRole("button", { name: "Previous" });
   const nextButton = page.getByRole("button", { name: "Next", exact: true });
+  await expect(
+    page.getByRole("banner").getByRole("navigation", { name: "Pagination" }),
+  ).toBeVisible();
   await expect(previousButton).toBeDisabled();
   await nextButton.click();
   await expect(page.getByText("Fantastic Four")).toBeVisible();
@@ -165,6 +175,9 @@ test("renders the Creators page with creator data", async ({ page }) => {
 
   const previousButton = page.getByRole("button", { name: "Previous" });
   const nextButton = page.getByRole("button", { name: "Next", exact: true });
+  await expect(
+    page.getByRole("banner").getByRole("navigation", { name: "Pagination" }),
+  ).toBeVisible();
   await expect(previousButton).toBeDisabled();
   await nextButton.click();
   await expect(page.getByText("Jack Kirby")).toBeVisible();

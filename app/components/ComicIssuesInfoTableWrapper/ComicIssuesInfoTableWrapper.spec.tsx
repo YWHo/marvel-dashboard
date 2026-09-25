@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useRouter } from "next/navigation";
 import { ComicIssuesInfoTableWrapper } from "./ComicIssuesInfoTableWrapper";
@@ -195,7 +195,9 @@ describe("ComicIssuesInfoTableWrapper", () => {
 
     render(<ComicIssuesInfoTableWrapper showSearchBar />);
 
-    const searchInput = screen.getByRole("searchbox", {
+    const toolbar = screen.getByRole("banner");
+    expect(toolbar).toHaveClass("sticky", "top-12");
+    const searchInput = within(toolbar).getByRole("searchbox", {
       name: "Search comic issues by title",
     });
     await user.type(searchInput, "  Spider Man  ");

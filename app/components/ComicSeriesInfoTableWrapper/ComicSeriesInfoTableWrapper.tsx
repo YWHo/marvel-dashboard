@@ -4,6 +4,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PaginationControls } from "@/app/components/PaginationControls";
+import { ListToolbar } from "@/app/components/ListToolbar";
 import { Spinner } from "@/app/components/Spiner";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
 import { buildApiUrl } from "@/app/lib/api";
@@ -38,27 +39,8 @@ export function ComicSeriesInfoTableWrapper() {
   };
 
   return (
-    <div className="relative min-h-[100px]: max-w-5xl mt-14">
-      <h1
-        ref={headingRef}
-        tabIndex={-1}
-        className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold focus:outline-none"
-      >
-        The Marvel comic series
-      </h1>
-      {isPending && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
-          <Spinner />
-        </div>
-      )}
-      {error && <div className="text-center text-red-500">Failed to load </div>}
-      <section className="flex flex-col items-center justify-center">
-        <ComicSeriesInfoTable
-          itemList={tableItems}
-          onClickCallBack={(id) => {
-            router.push(`/comic-series/${id}`);
-          }}
-        />
+    <div className="relative mt-14 min-h-[100px] max-w-5xl">
+      <ListToolbar headingRef={headingRef} title="The Marvel comic series">
         {!isPending && !error && (
           <PaginationControls
             hasNextPage={data?.has_next ?? false}
@@ -70,6 +52,20 @@ export function ComicSeriesInfoTableWrapper() {
             total={data?.total ?? 0}
           />
         )}
+      </ListToolbar>
+      {isPending && (
+        <div className="flex min-h-40 items-start justify-center pt-10">
+          <Spinner />
+        </div>
+      )}
+      {error && <div className="text-center text-red-500">Failed to load </div>}
+      <section className="flex flex-col items-center justify-center">
+        <ComicSeriesInfoTable
+          itemList={tableItems}
+          onClickCallBack={(id) => {
+            router.push(`/comic-series/${id}`);
+          }}
+        />
         <div className="my-8">&nbsp;</div>
       </section>
     </div>

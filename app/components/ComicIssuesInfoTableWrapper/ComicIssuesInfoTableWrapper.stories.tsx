@@ -66,6 +66,7 @@ export const AllIssues: Story = {
     await expect(
       await canvas.findByRole("heading", { name: "The Marvel comic issues" }),
     ).toBeInTheDocument();
+    await expect(canvas.getByRole("banner")).toHaveClass("sticky", "top-12");
     await expect(await canvas.findByText("Amazing Fantasy #15"))
       .toBeInTheDocument();
     await expect(canvas.getAllByRole("row")).toHaveLength(3);
