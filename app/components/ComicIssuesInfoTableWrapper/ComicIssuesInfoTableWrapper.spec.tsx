@@ -35,6 +35,10 @@ const router = {
 } satisfies ReturnType<typeof useRouter>;
 
 const apiData = {
+  total: 1,
+  limit: 20,
+  offset: 0,
+  has_next: false,
   series_id: "series-303",
   series_name: "Fantastic Four",
   items: [
@@ -68,8 +72,8 @@ describe("ComicIssuesInfoTableWrapper", () => {
     render(<ComicIssuesInfoTableWrapper />);
 
     expect(mockedUseApiQuery).toHaveBeenCalledWith({
-      queryKey: comicIssueKeys.list(),
-      requestUrl: "/api/comic-issues",
+      queryKey: comicIssueKeys.list({ limit: 20, offset: 0 }),
+      requestUrl: "/api/comic-issues?limit=20&offset=0",
     });
     expect(
       screen.getByRole("heading", { name: "The Marvel comic issues" }),
@@ -134,15 +138,20 @@ describe("ComicIssuesInfoTableWrapper", () => {
     await user.click(screen.getByRole("button", { name: "Search" }));
 
     expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
-      queryKey: comicIssueKeys.search({ query: "Spider Man" }),
-      requestUrl: "/api/comic-issues/search?q=Spider%20Man",
+      queryKey: comicIssueKeys.search({
+        limit: 20,
+        offset: 0,
+        query: "Spider Man",
+      }),
+      requestUrl:
+        "/api/comic-issues/search?limit=20&offset=0&q=Spider+Man",
     });
 
     await user.clear(searchInput);
 
     expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
-      queryKey: comicIssueKeys.list(),
-      requestUrl: "/api/comic-issues",
+      queryKey: comicIssueKeys.list({ limit: 20, offset: 0 }),
+      requestUrl: "/api/comic-issues?limit=20&offset=0",
     });
   });
 

@@ -3,25 +3,22 @@
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { buildApiUrl } from "@/app/lib/api";
 import { comicSeriesKeys } from "@/app/lib/queryKeys";
+import type { PaginatedResponse } from "@/app/lib/type-definitions";
 import {
   type ComicSeriesItemType,
   ComicSeriesInfoTable,
 } from "@/app/components/ComicSeriesInfoTable";
 
-type ComicSeriesApiType = {
-  total: number;
-  limit: number;
-  offset: number;
-  has_next: boolean;
-  items: ComicSeriesItemType[];
-};
-
 export function ComicSeriesInfoTableWrapper() {
   const router = useRouter();
-  const requestUrl = "/api/comic-series";
-  const { data, error, isPending } = useApiQuery<ComicSeriesApiType>({
-    queryKey: comicSeriesKeys.list(),
+  const pagination = { limit: 20, offset: 0 };
+  const requestUrl = buildApiUrl("/api/comic-series", pagination);
+  const { data, error, isPending } = useApiQuery<
+    PaginatedResponse<ComicSeriesItemType>
+  >({
+    queryKey: comicSeriesKeys.list(pagination),
     requestUrl,
   });
 

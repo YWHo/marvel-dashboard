@@ -3,26 +3,23 @@
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { buildApiUrl } from "@/app/lib/api";
 import { comicCreatorKeys } from "@/app/lib/queryKeys";
+import type { PaginatedResponse } from "@/app/lib/type-definitions";
 import {
   type ComicCreatorsItemType,
   ComicCreatorsInfoTable,
 } from "@/app/components/ComicCreatorsInfoTable";
 
-type ComicCreatorsApiType = {
-  total: number;
-  limit: number;
-  offset: number;
-  has_next: boolean;
-  items: ComicCreatorsItemType[];
-};
-
 export function ComicCreatorsInfoTableWrapper() {
   const router = useRouter();
 
-  const requestUrl = "/api/comic-creators";
-  const { data, error, isPending } = useApiQuery<ComicCreatorsApiType>({
-    queryKey: comicCreatorKeys.list(),
+  const pagination = { limit: 20, offset: 0 };
+  const requestUrl = buildApiUrl("/api/comic-creators", pagination);
+  const { data, error, isPending } = useApiQuery<
+    PaginatedResponse<ComicCreatorsItemType>
+  >({
+    queryKey: comicCreatorKeys.list(pagination),
     requestUrl,
   });
   const tableItems = data?.items && !error ? data.items : [];

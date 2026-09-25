@@ -95,6 +95,35 @@ describe("InfoTable", () => {
       enabled: true,
       initialData: undefined,
     });
+
+    await user.click(screen.getByRole("button", { name: "Descending" }));
+
+    expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
+      queryKey: characterKeys.resource("/api/characters", {
+        limit: 10,
+        offset: 0,
+        orderBy: "-name",
+        nameStartsWith: "Spi",
+      }),
+      requestUrl:
+        "/api/characters?limit=10&offset=0&orderBy=-name&nameStartsWith=Spi",
+      enabled: true,
+      initialData: undefined,
+    });
+
+    await user.click(screen.getByRole("button", { name: /Next.Page/ }));
+    await user.clear(screen.getByRole("searchbox", { name: "Search" }));
+
+    expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
+      queryKey: characterKeys.resource("/api/characters", {
+        limit: 10,
+        offset: 0,
+        orderBy: "-name",
+      }),
+      requestUrl: "/api/characters?limit=10&offset=0&orderBy=-name",
+      enabled: true,
+      initialData: undefined,
+    });
   });
 
   it("disables the query and shows loading feedback appropriately", () => {

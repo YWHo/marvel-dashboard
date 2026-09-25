@@ -54,8 +54,8 @@ describe("ComicSeriesInfoTableWrapper", () => {
     render(<ComicSeriesInfoTableWrapper />);
 
     expect(mockedUseApiQuery).toHaveBeenCalledWith({
-      queryKey: comicSeriesKeys.list(),
-      requestUrl: "/api/comic-series",
+      queryKey: comicSeriesKeys.list({ limit: 20, offset: 0 }),
+      requestUrl: "/api/comic-series?limit=20&offset=0",
     });
     expect(
       screen.getByRole("heading", { name: "The Marvel comic series" }),

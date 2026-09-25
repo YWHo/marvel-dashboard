@@ -50,7 +50,13 @@ export const AllIssues: Story = {
     },
     msw: [
       http.get("/api/comic-issues", () =>
-        HttpResponse.json({ items: issueItems }),
+        HttpResponse.json({
+          total: issueItems.length,
+          limit: 20,
+          offset: 0,
+          has_next: false,
+          items: issueItems,
+        }),
       ),
     ],
   },
@@ -117,12 +123,22 @@ export const SearchIssues: Story = {
   parameters: {
     msw: [
       http.get("/api/comic-issues", () =>
-        HttpResponse.json({ items: issueItems }),
+        HttpResponse.json({
+          total: issueItems.length,
+          limit: 20,
+          offset: 0,
+          has_next: false,
+          items: issueItems,
+        }),
       ),
       http.get("/api/comic-issues/search", ({ request }) => {
         const query = new URL(request.url).searchParams.get("q");
 
         return HttpResponse.json({
+          total: query === "Amazing Fantasy" ? 1 : 0,
+          limit: 20,
+          offset: 0,
+          has_next: false,
           items: query === "Amazing Fantasy" ? [issueItems[0]] : [],
         });
       }),
@@ -181,7 +197,15 @@ export const Error: Story = {
 export const Empty: Story = {
   parameters: {
     msw: [
-      http.get("/api/comic-issues", () => HttpResponse.json({ items: [] })),
+      http.get("/api/comic-issues", () =>
+        HttpResponse.json({
+          total: 0,
+          limit: 20,
+          offset: 0,
+          has_next: false,
+          items: [],
+        }),
+      ),
     ],
   },
   async play({ canvasElement }) {

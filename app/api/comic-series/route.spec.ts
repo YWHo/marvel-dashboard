@@ -21,16 +21,21 @@ const mockedGetTargetUrl = jest.mocked(getTargetUrl);
 
 describe("GET /api/comic-series", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     mockedGetTargetUrl.mockReturnValue("https://example.test/v1/series");
     mockedGetServerCacheKey.mockReturnValue("comic-series-cache-key");
   });
 
-  it("returns the comic-series API payload", async () => {
+  it.each([
+    { page: "first", limit: 10, offset: 0, total: 25, hasNext: true },
+    { page: "middle", limit: 10, offset: 10, total: 25, hasNext: true },
+    { page: "final", limit: 10, offset: 20, total: 25, hasNext: false },
+  ])("returns the $page series page", async ({ limit, offset, total, hasNext }) => {
     const payload = {
-      total: faker.number.int({ min: 1, max: 500 }),
-      limit: 10,
-      offset: 0,
-      has_next: faker.datatype.boolean(),
+      total,
+      limit,
+      offset,
+      has_next: hasNext,
       items: Array.from({ length: 2 }, () => ({
         id: faker.string.uuid(),
         name: faker.commerce.productName(),
@@ -40,13 +45,17 @@ describe("GET /api/comic-series", () => {
     mockedFetchData.mockResolvedValue({ data: payload });
 
     const request = new NextRequest(
-      "http://localhost/api/comic-series?limit=10&offset=0",
+      `http://localhost/api/comic-series?limit=${limit}&offset=${offset}&orderBy=name`,
     );
     const response = await GET(request);
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual(payload);
     expect(mockedGetTargetUrl).toHaveBeenCalledWith(
+      request.url,
+      expect.stringContaining("/v1/series"),
+    );
+    expect(mockedGetServerCacheKey).toHaveBeenCalledWith(
       request.url,
       expect.stringContaining("/v1/series"),
     );

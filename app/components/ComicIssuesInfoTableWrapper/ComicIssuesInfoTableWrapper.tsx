@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
 import { SearchBox } from "@/app/components/SearchBox";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { buildApiUrl } from "@/app/lib/api";
 import {
   comicCreatorKeys,
   comicIssueKeys,
@@ -13,11 +14,11 @@ import {
 } from "@/app/lib/queryKeys";
 import { ComicIssuesInfoTable } from "@/app/components/ComicIssuesInfoTable";
 import type { ComicIssueItemType } from "@/app/components/ComicIssueItemDetails";
+import type { PaginatedResponse } from "@/app/lib/type-definitions";
 
-type ComicIssuesApiType = {
-  series_id: string;
-  series_name: string;
-  items: ComicIssueItemType[];
+type ComicIssuesApiType = PaginatedResponse<ComicIssueItemType> & {
+  series_id?: string;
+  series_name?: string;
 };
 
 type ComicIssuesInfoTableWrapperProps = {
@@ -102,11 +103,18 @@ function getRequestOptions({
   searchString?: string;
 }) {
   const normalizedSearchString = searchString?.trim();
+  const pagination = { limit: 20, offset: 0 };
 
   if (normalizedSearchString) {
     return {
-      queryKey: comicIssueKeys.search({ query: normalizedSearchString }),
-      requestUrl: `/api/comic-issues/search?q=${encodeURIComponent(normalizedSearchString)}`,
+      queryKey: comicIssueKeys.search({
+        ...pagination,
+        query: normalizedSearchString,
+      }),
+      requestUrl: buildApiUrl("/api/comic-issues/search", {
+        ...pagination,
+        q: normalizedSearchString,
+      }),
     };
   }
 
@@ -125,7 +133,7 @@ function getRequestOptions({
   }
 
   return {
-    queryKey: comicIssueKeys.list(),
-    requestUrl: "/api/comic-issues",
+    queryKey: comicIssueKeys.list(pagination),
+    requestUrl: buildApiUrl("/api/comic-issues", pagination),
   };
 }

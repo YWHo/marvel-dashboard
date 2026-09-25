@@ -7,6 +7,14 @@ export type InfoRow = {
 
 export type InfoList = InfoRow[];
 
+export type PaginatedResponse<T> = {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_next: boolean;
+};
+
 export enum RowDisplayType {
   WITH_IMAGE = "WITH_IMAGE",
   SIMPLE = "SIMPLE",

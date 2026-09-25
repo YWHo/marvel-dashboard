@@ -15,6 +15,7 @@ import { SortButtons } from "@/app/components/SortButtons";
 import { Spinner } from "@/app/components/Spiner";
 import { DualDirectionButtons } from "@/app/components/DualDirectionButtons";
 import { mapToInfoList } from "@/app/lib/helpers";
+import { buildApiUrl } from "@/app/lib/api";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
 import { characterKeys } from "@/app/lib/queryKeys";
 
@@ -50,18 +51,6 @@ export function InfoTable({
   const limit = 10;
   let totalItems = 0;
 
-  const orderingRequest = orderByType
-    ? sortDirection == "ascending"
-      ? `&orderBy=${orderByType}`
-      : `&orderBy=-${orderByType}`
-    : "";
-  const searchRequest =
-    searchByType?.length && searchTerm.length
-      ? `&${searchByType}=${searchTerm}`
-      : "";
-  const requestUrl = baseUrl
-    ? `${baseUrl}?limit=${limit}&offset=${offset}${orderingRequest}${searchRequest}`
-    : "";
   const queryParameters = {
     limit,
     offset,
@@ -75,6 +64,7 @@ export function InfoTable({
       ? { [searchByType]: searchTerm }
       : {}),
   };
+  const requestUrl = buildApiUrl(baseUrl, queryParameters);
 
   const { data, error, isPending } = useApiQuery<any>({
     queryKey: characterKeys.resource(baseUrl, queryParameters),
@@ -132,12 +122,23 @@ export function InfoTable({
       {error && <div className="text-center text-red-500">Failed to load </div>}
       <div className="flex flex-col gap-y-1 md:flex-row md:gap-x-4 mt-11 mb-2 md:justify-center items-center">
         {hasSearchBox ? (
-          <SearchBox buttonText="Go" onSearchCallback={setSearchTerm} />
+          <SearchBox
+            buttonText="Go"
+            onSearchCallback={(nextSearchTerm) => {
+              setOffset(0);
+              setSearchTerm(nextSearchTerm);
+            }}
+          />
         ) : (
           ""
         )}
         {hasSortButtons ? (
-          <SortButtons onSortCallback={setSortDirection} />
+          <SortButtons
+            onSortCallback={(nextSortDirection) => {
+              setOffset(0);
+              setSortDirection(nextSortDirection);
+            }}
+          />
         ) : (
           ""
         )}

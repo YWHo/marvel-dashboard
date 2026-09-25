@@ -1,7 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
 test("renders the landing page and links to comic issues", async ({ page }) => {
-  await mockJson(page, "/api/comic-issues", { items: [] });
+  await mockJson(page, "/api/comic-issues", {
+    total: 0,
+    limit: 20,
+    offset: 0,
+    has_next: false,
+    items: [],
+  });
   await page.goto("/");
 
   await expect(
@@ -23,6 +29,10 @@ test("renders the landing page and links to comic issues", async ({ page }) => {
 
 test("renders the Issues page with issue data", async ({ page }) => {
   await mockJson(page, "/api/comic-issues", {
+    total: 1,
+    limit: 20,
+    offset: 0,
+    has_next: false,
     items: [
       {
         id: "issue-101",
@@ -38,6 +48,10 @@ test("renders the Issues page with issue data", async ({ page }) => {
     ],
   });
   await mockJson(page, "/api/comic-issues/search", {
+    total: 1,
+    limit: 20,
+    offset: 0,
+    has_next: false,
     items: [
       {
         id: "issue-202",

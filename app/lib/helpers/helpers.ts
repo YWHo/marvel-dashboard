@@ -118,12 +118,16 @@ export function generateMD5(input: string): string {
  * @returns {Promise<{ data?: any, error?: string, status?: number, isCached: boolean }>}
  *          Returns an object containing the fetched data, error message, status code, and caching status.
  */
-export async function fetchData(
+type FetchDataResult<T> =
+  | { data: T; error?: undefined; status?: undefined }
+  | { data?: undefined; error: string; status: number };
+
+export async function fetchData<T = unknown>(
   url: string,
   headers: Headers,
-  cacheKey: string
-) {
-  const cachedData = getCache(cacheKey);
+  cacheKey: string,
+): Promise<FetchDataResult<T>> {
+  const cachedData = getCache(cacheKey) as T | undefined;
   if (cachedData) {
     console.log(`\n+ Returning cached response for: "${cacheKey}"`);
     return { data: cachedData };
@@ -142,7 +146,7 @@ export async function fetchData(
       };
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as T;
     setCache(cacheKey, data); // Cache the data for future requests
 
     return { data };

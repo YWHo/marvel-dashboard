@@ -52,8 +52,8 @@ describe("ComicCreatorsInfoTableWrapper", () => {
     render(<ComicCreatorsInfoTableWrapper />);
 
     expect(mockedUseApiQuery).toHaveBeenCalledWith({
-      queryKey: comicCreatorKeys.list(),
-      requestUrl: "/api/comic-creators",
+      queryKey: comicCreatorKeys.list({ limit: 20, offset: 0 }),
+      requestUrl: "/api/comic-creators?limit=20&offset=0",
     });
     expect(
       screen.getByRole("heading", { name: "The Marvel comic creators" }),
