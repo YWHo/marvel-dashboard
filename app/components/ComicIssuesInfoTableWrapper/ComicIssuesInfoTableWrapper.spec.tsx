@@ -30,6 +30,7 @@ const mockedUseRouter = jest.mocked(useRouter);
 const mockedUseApiQuery = jest.mocked(useApiQuery);
 const mockedUseInfiniteComicIssues = jest.mocked(useInfiniteComicIssues);
 const fetchNextPage = jest.fn();
+const refetch = jest.fn();
 const push = jest.fn();
 const router = {
   back: jest.fn(),
@@ -67,8 +68,10 @@ function mockInfiniteQuery(overrides: Record<string, unknown> = {}) {
     error: null,
     fetchNextPage,
     hasNextPage: true,
+    isFetchNextPageError: false,
     isFetchingNextPage: false,
     isPending: false,
+    refetch,
     ...overrides,
   } as unknown as ReturnType<typeof useInfiniteComicIssues>);
 }
@@ -119,6 +122,7 @@ describe("ComicIssuesInfoTableWrapper", () => {
     expect(screen.getByText("Fantastic Four #2")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more" }))
       .not.toBeInTheDocument();
+    expect(screen.getByText("End of comic issues.")).toBeInTheDocument();
 
     await user.click(screen.getByText("Fantastic Four #1"));
 
@@ -235,7 +239,9 @@ describe("ComicIssuesInfoTableWrapper", () => {
     });
     rerender(<ComicIssuesInfoTableWrapper />);
 
-    expect(screen.getByText("Failed to load")).toBeInTheDocument();
+    expect(screen.getByText("Failed to load comic issues.")).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
 
     mockInfiniteQuery({
       data: { pages: [{ ...firstPage, items: [] }], pageParams: [0] },
@@ -254,5 +260,57 @@ describe("ComicIssuesInfoTableWrapper", () => {
       requestUrl: "",
       enabled: false,
     });
+  });
+
+  it("retries an initial error on request", async () => {
+    const user = userEvent.setup();
+    mockInfiniteQuery({
+      data: undefined,
+      error: new Error("API unavailable"),
+      hasNextPage: false,
+      isPending: false,
+    });
+
+    render(<ComicIssuesInfoTableWrapper />);
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+
+    expect(refetch).toHaveBeenCalledTimes(1);
+    expect(fetchNextPage).not.toHaveBeenCalled();
+  });
+
+  it("keeps loaded rows visible and retries a failed next page", async () => {
+    const user = userEvent.setup();
+    mockInfiniteQuery({
+      error: new Error("Next page unavailable"),
+      isFetchNextPageError: true,
+    });
+
+    render(<ComicIssuesInfoTableWrapper />);
+
+    expect(screen.getByText("Fantastic Four #1")).toBeInTheDocument();
+    expect(
+      screen.getByText("Could not load more comic issues."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Load more" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Retry loading more" }),
+    );
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("announces next-page loading while preserving loaded rows", () => {
+    mockInfiniteQuery({ isFetchingNextPage: true });
+
+    render(<ComicIssuesInfoTableWrapper />);
+
+    expect(screen.getByText("Fantastic Four #1")).toBeInTheDocument();
+    expect(screen.getByText("Loading more comic issues…")).toHaveAttribute(
+      "role",
+      "status",
+    );
   });
 });

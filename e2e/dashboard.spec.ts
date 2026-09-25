@@ -28,11 +28,13 @@ test("renders the landing page and links to comic issues", async ({ page }) => {
 });
 
 test("renders the Issues page with issue data", async ({ page }) => {
+  const requestedOffsets: string[] = [];
   await mockPaginatedJson(
     page,
     "/api/comic-issues",
     paginatedPayload(issue("issue-101", "Amazing Fantasy #15"), true, 0),
     paginatedPayload(issue("issue-303", "The Avengers #1"), false, 20),
+    (offset) => requestedOffsets.push(offset),
   );
   await mockJson(page, "/api/comic-issues/search", {
     total: 1,
@@ -67,11 +69,16 @@ test("renders the Issues page with issue data", async ({ page }) => {
     "page",
   );
 
-  const loadMoreButton = page.getByRole("button", { name: "Load more" });
-  await loadMoreButton.click();
   await expect(page.getByText("The Avengers #1")).toBeVisible();
   await expect(page.getByText("Amazing Fantasy #15")).toBeVisible();
-  await expect(loadMoreButton).not.toBeVisible();
+  await expect(page.getByText("End of comic issues.")).toBeVisible();
+  expect(requestedOffsets.filter((offset) => offset === "20")).toHaveLength(1);
+  const requestCountAtCompletion = requestedOffsets.length;
+
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.mouse.wheel(0, 500);
+  await page.waitForTimeout(300);
+  expect(requestedOffsets).toHaveLength(requestCountAtCompletion);
 
   await page
     .getByRole("searchbox", { name: "Search comic issues by title" })
@@ -202,11 +209,13 @@ async function mockPaginatedJson(
   pathname: string,
   firstPage: unknown,
   secondPage: unknown,
+  onRequest?: (offset: string) => void,
 ) {
   await page.route(
     (url) => url.pathname === pathname,
     async (route) => {
       const offset = new URL(route.request().url()).searchParams.get("offset");
+      onRequest?.(offset ?? "0");
       await route.fulfill({ json: offset === "20" ? secondPage : firstPage });
     },
   );
