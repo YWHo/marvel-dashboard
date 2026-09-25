@@ -14,7 +14,7 @@ Live site: [marvel-dashboard-ten.vercel.app](https://marvel-dashboard-ten.vercel
 
 ## Query and Retry Policy
 
-Query-key factories in `app/lib/queryKeys.ts` separate characters, creators, issues, and series. Keys include every input that can change a response, including resource URL, IDs, endpoint mode, search text, sort direction, limit, and offset where applicable. Keys never contain credentials.
+Query-key factories in `app/lib/queryKeys.ts` separate creators, issues, and series. Keys include every input that can change a response, including IDs, endpoint mode, search text, limit, and offset where applicable. Keys never contain credentials.
 
 The shared query client disables automatic retries, focus refetches, and reconnect refetches. Errors therefore remain visible until the user retries or another explicit request is made.
 

@@ -62,7 +62,7 @@ export const Creators: Story = {
 export const NoActiveItem: Story = {
   parameters: {
     nextjs: {
-      navigation: { pathname: "/heroes/character-101" },
+      navigation: { pathname: "/unknown/route" },
     },
   },
 };

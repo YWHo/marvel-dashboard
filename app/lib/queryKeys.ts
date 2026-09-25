@@ -2,26 +2,6 @@ export type QueryParameters = Readonly<
   Record<string, boolean | number | string | undefined>
 >;
 
-export const characterKeys = {
-  all: ["characters"] as const,
-  lists: () => [...characterKeys.all, "list"] as const,
-  list: (parameters: QueryParameters = {}) =>
-    [...characterKeys.lists(), parameters] as const,
-  resource: (resourceUrl: string, parameters: QueryParameters = {}) =>
-    [...characterKeys.all, "resource", resourceUrl, parameters] as const,
-  details: () => [...characterKeys.all, "detail"] as const,
-  detail: (characterId: string) =>
-    [...characterKeys.details(), characterId] as const,
-  comics: (characterId: string, parameters: QueryParameters = {}) =>
-    [...characterKeys.detail(characterId), "comics", parameters] as const,
-  events: (characterId: string, parameters: QueryParameters = {}) =>
-    [...characterKeys.detail(characterId), "events", parameters] as const,
-  series: (characterId: string, parameters: QueryParameters = {}) =>
-    [...characterKeys.detail(characterId), "series", parameters] as const,
-  stories: (characterId: string, parameters: QueryParameters = {}) =>
-    [...characterKeys.detail(characterId), "stories", parameters] as const,
-};
-
 export const comicCreatorKeys = {
   all: ["comic-creators"] as const,
   lists: () => [...comicCreatorKeys.all, "list"] as const,

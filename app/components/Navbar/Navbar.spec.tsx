@@ -82,7 +82,7 @@ describe("Navbar", () => {
   );
 
   it("does not mark a navigation item active on an unrelated route", () => {
-    mockedUsePathname.mockReturnValue("/heroes/character-404");
+    mockedUsePathname.mockReturnValue("/unknown/route");
 
     render(<Navbar />);
 

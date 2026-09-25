@@ -1,39 +1,10 @@
 import {
-  characterKeys,
   comicCreatorKeys,
   comicIssueKeys,
   comicSeriesKeys,
 } from "./queryKeys";
 
 describe("query keys", () => {
-  it("builds character keys with every response parameter", () => {
-    expect(characterKeys.list({ limit: 20, offset: 40 })).toEqual([
-      "characters",
-      "list",
-      { limit: 20, offset: 40 },
-    ]);
-    expect(characterKeys.comics("character-101", { orderBy: "title" })).toEqual(
-      [
-        "characters",
-        "detail",
-        "character-101",
-        "comics",
-        { orderBy: "title" },
-      ],
-    );
-    expect(
-      characterKeys.resource("/api/characters/character-101/events", {
-        limit: 10,
-        offset: 20,
-      }),
-    ).toEqual([
-      "characters",
-      "resource",
-      "/api/characters/character-101/events",
-      { limit: 10, offset: 20 },
-    ]);
-  });
-
   it("builds comic creator keys", () => {
     expect(comicCreatorKeys.detail("creator-101")).toEqual([
       "comic-creators",

@@ -1,7 +1,5 @@
 import { getServerCacheKey, getTargetUrl } from "./helpers";
 
-jest.mock("html-react-parser", () => jest.fn());
-
 describe("API proxy URL helpers", () => {
   const requestUrl =
     "http://localhost/api/comic-issues/search?limit=20&offset=40&q=Spider%20Man&orderBy=-title";
