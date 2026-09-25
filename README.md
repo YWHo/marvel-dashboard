@@ -2,6 +2,8 @@
 
 https://marvel-dashboard-ten.vercel.app/
 
+Client-side API state is managed with TanStack Query.
+
 ## Running project locally
 
 1. Install pnpm on your local computer by visiting the following website: \

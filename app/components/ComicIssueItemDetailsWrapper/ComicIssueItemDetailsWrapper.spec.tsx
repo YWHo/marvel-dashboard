@@ -1,20 +1,21 @@
 import { render, screen } from "@testing-library/react";
 import { ComicIssueItemDetailsWrapper } from "./ComicIssueItemDetailsWrapper";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicIssueKeys } from "@/app/lib/queryKeys";
 
-jest.mock("@/app/hooks/useApiData", () => ({
-  useApiData: jest.fn(),
+jest.mock("@/app/hooks/useApiQuery", () => ({
+  useApiQuery: jest.fn(),
 }));
 
 jest.mock("@/app/components/Spiner", () => ({
   Spinner: () => <div>Loading issue details</div>,
 }));
 
-const mockedUseApiData = jest.mocked(useApiData);
+const mockedUseApiQuery = jest.mocked(useApiQuery);
 
 describe("ComicIssueItemDetailsWrapper", () => {
   it("loads and displays the requested comic issue", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         id: "issue-202",
         title: "The Mighty Thor #1",
@@ -32,16 +33,18 @@ describe("ComicIssueItemDetailsWrapper", () => {
         creators: [{ id: "creator-5", name: "Jane Writer", role: "writer" }],
         cover: { path: "", extension: "" },
       },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+      isFetching: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssueItemDetailsWrapper issueId="issue-202" />);
 
-    expect(mockedUseApiData).toHaveBeenCalledWith(
-      "/api/comic-issues/issue-202",
-      { keepPreviousData: true, fallbackData: undefined },
-    );
+    expect(mockedUseApiQuery).toHaveBeenCalledWith({
+      queryKey: comicIssueKeys.detail("issue-202"),
+      requestUrl: "/api/comic-issues/issue-202",
+      enabled: true,
+    });
     expect(
       screen.getByRole("heading", { name: "The Mighty Thor #1" }),
     ).toBeInTheDocument();
@@ -49,11 +52,12 @@ describe("ComicIssueItemDetailsWrapper", () => {
   });
 
   it("shows a spinner while the issue is loading", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: undefined,
-      error: undefined,
-      isValidating: true,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: true,
+      isFetching: true,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssueItemDetailsWrapper issueId="issue-202" />);
 
@@ -64,11 +68,12 @@ describe("ComicIssueItemDetailsWrapper", () => {
   });
 
   it("shows error and empty-data states", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: undefined,
       error: new Error("API unavailable"),
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      isPending: false,
+      isFetching: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     const { rerender } = render(
       <ComicIssueItemDetailsWrapper issueId="issue-202" />,
@@ -78,13 +83,35 @@ describe("ComicIssueItemDetailsWrapper", () => {
       screen.getByText("Failed to load this comic issue. Please try again later."),
     ).toBeInTheDocument();
 
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: undefined,
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+      isFetching: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
     rerender(<ComicIssueItemDetailsWrapper issueId="issue-202" />);
 
+    expect(
+      screen.getByText("No issue details are available."),
+    ).toBeInTheDocument();
+  });
+
+  it("does not request data without an issue ID", () => {
+    mockedUseApiQuery.mockReturnValue({
+      data: undefined,
+      error: null,
+      isPending: true,
+      isFetching: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
+
+    render(<ComicIssueItemDetailsWrapper />);
+
+    expect(mockedUseApiQuery).toHaveBeenCalledWith({
+      queryKey: comicIssueKeys.detail(""),
+      requestUrl: "/api/comic-issues/",
+      enabled: false,
+    });
+    expect(screen.queryByText("Loading issue details")).not.toBeInTheDocument();
     expect(
       screen.getByText("No issue details are available."),
     ).toBeInTheDocument();

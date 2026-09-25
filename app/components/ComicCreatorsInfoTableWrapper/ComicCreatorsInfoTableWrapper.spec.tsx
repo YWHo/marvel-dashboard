@@ -2,14 +2,15 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useRouter } from "next/navigation";
 import { ComicCreatorsInfoTableWrapper } from "./ComicCreatorsInfoTableWrapper";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicCreatorKeys } from "@/app/lib/queryKeys";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock("@/app/hooks/useApiData", () => ({
-  useApiData: jest.fn(),
+jest.mock("@/app/hooks/useApiQuery", () => ({
+  useApiQuery: jest.fn(),
 }));
 
 jest.mock("@/app/components/Spiner", () => ({
@@ -17,7 +18,7 @@ jest.mock("@/app/components/Spiner", () => ({
 }));
 
 const mockedUseRouter = jest.mocked(useRouter);
-const mockedUseApiData = jest.mocked(useApiData);
+const mockedUseApiQuery = jest.mocked(useApiQuery);
 const push = jest.fn();
 const router = {
   back: jest.fn(),
@@ -36,7 +37,7 @@ describe("ComicCreatorsInfoTableWrapper", () => {
 
   it("loads creators and navigates to the selected creator", async () => {
     const user = userEvent.setup();
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         total: 1,
         limit: 20,
@@ -44,15 +45,15 @@ describe("ComicCreatorsInfoTableWrapper", () => {
         has_next: false,
         items: [{ id: "creator-303", name: "Steve Ditko", issueCount: 64 }],
       },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicCreatorsInfoTableWrapper />);
 
-    expect(mockedUseApiData).toHaveBeenCalledWith("/api/comic-creators", {
-      keepPreviousData: true,
-      fallbackData: undefined,
+    expect(mockedUseApiQuery).toHaveBeenCalledWith({
+      queryKey: comicCreatorKeys.list(),
+      requestUrl: "/api/comic-creators",
     });
     expect(
       screen.getByRole("heading", { name: "The Marvel comic creators" }),
@@ -64,7 +65,7 @@ describe("ComicCreatorsInfoTableWrapper", () => {
   });
 
   it("shows loading and error feedback without stale creator rows", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         total: 1,
         limit: 20,
@@ -73,8 +74,8 @@ describe("ComicCreatorsInfoTableWrapper", () => {
         items: [{ id: "stale-creator", name: "Stale Creator", issueCount: 1 }],
       },
       error: new Error("API unavailable"),
-      isValidating: true,
-    } as ReturnType<typeof useApiData>);
+      isPending: true,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicCreatorsInfoTableWrapper />);
 

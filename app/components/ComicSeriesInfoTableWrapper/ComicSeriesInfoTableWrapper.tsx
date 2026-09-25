@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicSeriesKeys } from "@/app/lib/queryKeys";
 import {
   type ComicSeriesItemType,
   ComicSeriesInfoTable,
@@ -19,9 +20,9 @@ type ComicSeriesApiType = {
 export function ComicSeriesInfoTableWrapper() {
   const router = useRouter();
   const requestUrl = "/api/comic-series";
-  const { data, error, isValidating } = useApiData<ComicSeriesApiType>(requestUrl, {
-    keepPreviousData: true,
-    fallbackData: undefined,
+  const { data, error, isPending } = useApiQuery<ComicSeriesApiType>({
+    queryKey: comicSeriesKeys.list(),
+    requestUrl,
   });
 
   const tableItems =
@@ -32,7 +33,7 @@ export function ComicSeriesInfoTableWrapper() {
       <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
         The Marvel comic series
       </h1>
-      {isValidating && (
+      {isPending && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
           <Spinner />
         </div>

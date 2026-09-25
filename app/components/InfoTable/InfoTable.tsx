@@ -15,7 +15,8 @@ import { SortButtons } from "@/app/components/SortButtons";
 import { Spinner } from "@/app/components/Spiner";
 import { DualDirectionButtons } from "@/app/components/DualDirectionButtons";
 import { mapToInfoList } from "@/app/lib/helpers";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { characterKeys } from "@/app/lib/queryKeys";
 
 type Props = {
   baseUrl: string;
@@ -61,10 +62,25 @@ export function InfoTable({
   const requestUrl = baseUrl
     ? `${baseUrl}?limit=${limit}&offset=${offset}${orderingRequest}${searchRequest}`
     : "";
+  const queryParameters = {
+    limit,
+    offset,
+    ...(orderByType
+      ? {
+          orderBy:
+            sortDirection == "ascending" ? orderByType : `-${orderByType}`,
+        }
+      : {}),
+    ...(searchByType?.length && searchTerm.length
+      ? { [searchByType]: searchTerm }
+      : {}),
+  };
 
-  const { data, error, isValidating } = useApiData<any>(requestUrl, {
-    keepPreviousData: true,
-    fallbackData: mockData,
+  const { data, error, isPending } = useApiQuery<any>({
+    queryKey: characterKeys.resource(baseUrl, queryParameters),
+    requestUrl,
+    enabled: Boolean(baseUrl),
+    initialData: mockData,
   });
 
   const tableItems = data && !error ? mapToInfoList(data.data?.results) : [];
@@ -79,7 +95,7 @@ export function InfoTable({
     }
   }
 
-  if (!isValidating && (!tableItems || tableItems.length === 0)) {
+  if (!isPending && (!tableItems || tableItems.length === 0)) {
     return <div className="w-100 text-center">(No data)</div>;
   }
 
@@ -108,7 +124,7 @@ export function InfoTable({
         className
       )}
     >
-      {isValidating && (
+      {isPending && (
         <div className="absolute top-1 left-1/2 transform -translate-x-1/2">
           <Spinner />
         </div>
@@ -126,7 +142,7 @@ export function InfoTable({
           ""
         )}
         <DualDirectionButtons
-          isLoading={isValidating}
+          isLoading={isPending}
           onPrev={handlePrevPage}
           onNext={handleNextPage}
         />

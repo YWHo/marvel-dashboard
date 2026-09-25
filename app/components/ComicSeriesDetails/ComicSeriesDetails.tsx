@@ -1,7 +1,8 @@
 "use client";
 
 import { Spinner } from "@/app/components/Spiner";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicSeriesKeys } from "@/app/lib/queryKeys";
 
 type ComicSeriesDetailsApiType = {
   seriesId: string;
@@ -17,15 +18,12 @@ type ComicSeriesDetailsProps = {
 
 export function ComicSeriesDetails({ seriesId }: ComicSeriesDetailsProps) {
   const requestUrl = `/api/comic-series/${seriesId}`;
-  const { data, error, isValidating } = useApiData<ComicSeriesDetailsApiType>(
+  const { data, error, isPending } = useApiQuery<ComicSeriesDetailsApiType>({
+    queryKey: comicSeriesKeys.detail(seriesId),
     requestUrl,
-    {
-      keepPreviousData: true,
-      fallbackData: undefined,
-    },
-  );
+  });
 
-  if (isValidating) {
+  if (isPending) {
     return (
       <div className="mx-auto mt-14 flex min-h-48 w-full items-center justify-center rounded-xl border border-gray-700 bg-gray-900 sm:w-150 md:w-175 lg:w-225">
         <span className="sr-only">Loading series details</span>

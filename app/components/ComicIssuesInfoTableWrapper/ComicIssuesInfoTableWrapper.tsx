@@ -5,7 +5,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
 import { SearchBox } from "@/app/components/SearchBox";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import {
+  comicCreatorKeys,
+  comicIssueKeys,
+  comicSeriesKeys,
+} from "@/app/lib/queryKeys";
 import { ComicIssuesInfoTable } from "@/app/components/ComicIssuesInfoTable";
 import type { ComicIssueItemType } from "@/app/components/ComicIssueItemDetails";
 
@@ -31,15 +36,16 @@ export function ComicIssuesInfoTableWrapper({
   const [searchString, setSearchString] = useState("");
   const router = useRouter();
 
-  const requestUrl = getURL({ creatorId, seriesId, searchString });
+  const requestOptions = getRequestOptions({
+    creatorId,
+    seriesId,
+    searchString,
+  });
 
-  const { data, error, isValidating } = useApiData<ComicIssuesApiType>(
-    requestUrl,
-    {
-      keepPreviousData: true,
-      fallbackData: undefined,
-    },
-  );
+  const { data, error, isPending } = useApiQuery<ComicIssuesApiType>({
+    queryKey: requestOptions.queryKey,
+    requestUrl: requestOptions.requestUrl,
+  });
 
   const tableItems = data?.items && !error ? data.items : [];
 
@@ -62,14 +68,14 @@ export function ComicIssuesInfoTableWrapper({
           />
         </div>
       )}
-      {isValidating && (
+      {isPending && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
           <Spinner />
         </div>
       )}
       {error && <div className="text-center text-red-500">Failed to load </div>}
       <section className="flex flex-col items-center justify-center">
-        {!isValidating && tableItems.length > 0 && (
+        {!isPending && tableItems.length > 0 && (
           <ComicIssuesInfoTable
             itemList={tableItems}
             onClickCallBack={(id) => {
@@ -77,7 +83,7 @@ export function ComicIssuesInfoTableWrapper({
             }}
           />
         )}
-        {!isValidating && tableItems.length == 0 && (
+        {!isPending && tableItems.length == 0 && (
           <div className="w-100 text-center">(No data)</div>
         )}
         <div className="my-8">&nbsp;</div>
@@ -86,7 +92,7 @@ export function ComicIssuesInfoTableWrapper({
   );
 }
 
-function getURL({
+function getRequestOptions({
   creatorId,
   seriesId,
   searchString,
@@ -98,16 +104,28 @@ function getURL({
   const normalizedSearchString = searchString?.trim();
 
   if (normalizedSearchString) {
-    return `/api/comic-issues/search?q=${encodeURIComponent(normalizedSearchString)}`;
+    return {
+      queryKey: comicIssueKeys.search({ query: normalizedSearchString }),
+      requestUrl: `/api/comic-issues/search?q=${encodeURIComponent(normalizedSearchString)}`,
+    };
   }
 
   if (creatorId) {
-    return `/api/comic-creators/${creatorId}/issues`;
+    return {
+      queryKey: comicCreatorKeys.issues(creatorId),
+      requestUrl: `/api/comic-creators/${creatorId}/issues`,
+    };
   }
 
   if (seriesId) {
-    return `/api/comic-series/${seriesId}/issues`;
+    return {
+      queryKey: comicSeriesKeys.issues(seriesId),
+      requestUrl: `/api/comic-series/${seriesId}/issues`,
+    };
   }
 
-  return "/api/comic-issues";
+  return {
+    queryKey: comicIssueKeys.list(),
+    requestUrl: "/api/comic-issues",
+  };
 }
