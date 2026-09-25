@@ -2,14 +2,19 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useRouter } from "next/navigation";
 import { ComicIssuesInfoTableWrapper } from "./ComicIssuesInfoTableWrapper";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import {
+  comicCreatorKeys,
+  comicIssueKeys,
+  comicSeriesKeys,
+} from "@/app/lib/queryKeys";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock("@/app/hooks/useApiData", () => ({
-  useApiData: jest.fn(),
+jest.mock("@/app/hooks/useApiQuery", () => ({
+  useApiQuery: jest.fn(),
 }));
 
 jest.mock("@/app/components/Spiner", () => ({
@@ -17,7 +22,7 @@ jest.mock("@/app/components/Spiner", () => ({
 }));
 
 const mockedUseRouter = jest.mocked(useRouter);
-const mockedUseApiData = jest.mocked(useApiData);
+const mockedUseApiQuery = jest.mocked(useApiQuery);
 const push = jest.fn();
 const router = {
   back: jest.fn(),
@@ -54,17 +59,17 @@ describe("ComicIssuesInfoTableWrapper", () => {
 
   it("loads issues, displays the series name, and navigates to an issue", async () => {
     const user = userEvent.setup();
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: apiData,
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper />);
 
-    expect(mockedUseApiData).toHaveBeenCalledWith("/api/comic-issues", {
-      keepPreviousData: true,
-      fallbackData: undefined,
+    expect(mockedUseApiQuery).toHaveBeenCalledWith({
+      queryKey: comicIssueKeys.list(),
+      requestUrl: "/api/comic-issues",
     });
     expect(
       screen.getByRole("heading", { name: "The Marvel comic issues" }),
@@ -82,37 +87,43 @@ describe("ComicIssuesInfoTableWrapper", () => {
     {
       props: { creatorId: "creator-101" },
       expectedUrl: "/api/comic-creators/creator-101/issues",
+      expectedQueryKey: comicCreatorKeys.issues("creator-101"),
     },
     {
       props: { seriesId: "series-202" },
       expectedUrl: "/api/comic-series/series-202/issues",
+      expectedQueryKey: comicSeriesKeys.issues("series-202"),
     },
     {
       props: { creatorId: "creator-101", seriesId: "series-202" },
       expectedUrl: "/api/comic-creators/creator-101/issues",
+      expectedQueryKey: comicCreatorKeys.issues("creator-101"),
     },
-  ])("selects $expectedUrl as its data source", ({ props, expectedUrl }) => {
-    mockedUseApiData.mockReturnValue({
-      data: { ...apiData, items: [] },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+  ])(
+    "selects $expectedUrl as its data source",
+    ({ props, expectedUrl, expectedQueryKey }) => {
+      mockedUseApiQuery.mockReturnValue({
+        data: { ...apiData, items: [] },
+        error: null,
+        isPending: false,
+      } as unknown as ReturnType<typeof useApiQuery>);
 
-    render(<ComicIssuesInfoTableWrapper {...props} />);
+      render(<ComicIssuesInfoTableWrapper {...props} />);
 
-    expect(mockedUseApiData).toHaveBeenCalledWith(expectedUrl, {
-      keepPreviousData: true,
-      fallbackData: undefined,
-    });
-  });
+      expect(mockedUseApiQuery).toHaveBeenCalledWith({
+        queryKey: expectedQueryKey,
+        requestUrl: expectedUrl,
+      });
+    },
+  );
 
   it("loads title search results and restores all issues when cleared", async () => {
     const user = userEvent.setup();
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: { ...apiData, items: [] },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper showSearchBar />);
 
@@ -122,28 +133,25 @@ describe("ComicIssuesInfoTableWrapper", () => {
     await user.type(searchInput, "  Spider Man  ");
     await user.click(screen.getByRole("button", { name: "Search" }));
 
-    expect(mockedUseApiData).toHaveBeenLastCalledWith(
-      "/api/comic-issues/search?q=Spider%20Man",
-      {
-        keepPreviousData: true,
-        fallbackData: undefined,
-      },
-    );
+    expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
+      queryKey: comicIssueKeys.search({ query: "Spider Man" }),
+      requestUrl: "/api/comic-issues/search?q=Spider%20Man",
+    });
 
     await user.clear(searchInput);
 
-    expect(mockedUseApiData).toHaveBeenLastCalledWith("/api/comic-issues", {
-      keepPreviousData: true,
-      fallbackData: undefined,
+    expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
+      queryKey: comicIssueKeys.list(),
+      requestUrl: "/api/comic-issues",
     });
   });
 
   it("does not show search controls unless requested", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: { ...apiData, items: [] },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper />);
 
@@ -151,11 +159,11 @@ describe("ComicIssuesInfoTableWrapper", () => {
   });
 
   it("shows loading and error feedback without stale issue rows", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: apiData,
       error: new Error("API unavailable"),
-      isValidating: true,
-    } as ReturnType<typeof useApiData>);
+      isPending: true,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper />);
 
@@ -165,11 +173,11 @@ describe("ComicIssuesInfoTableWrapper", () => {
   });
 
   it("renders an empty-data message for a successful empty response", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: { ...apiData, items: [] },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper />);
 

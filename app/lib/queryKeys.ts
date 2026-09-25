@@ -7,6 +7,8 @@ export const characterKeys = {
   lists: () => [...characterKeys.all, "list"] as const,
   list: (parameters: QueryParameters = {}) =>
     [...characterKeys.lists(), parameters] as const,
+  resource: (resourceUrl: string, parameters: QueryParameters = {}) =>
+    [...characterKeys.all, "resource", resourceUrl, parameters] as const,
   details: () => [...characterKeys.all, "detail"] as const,
   detail: (characterId: string) =>
     [...characterKeys.details(), characterId] as const,

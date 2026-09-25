@@ -21,6 +21,17 @@ describe("query keys", () => {
         { orderBy: "title" },
       ],
     );
+    expect(
+      characterKeys.resource("/api/characters/character-101/events", {
+        limit: 10,
+        offset: 20,
+      }),
+    ).toEqual([
+      "characters",
+      "resource",
+      "/api/characters/character-101/events",
+      { limit: 10, offset: 20 },
+    ]);
   });
 
   it("builds comic creator keys", () => {

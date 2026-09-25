@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/app/components/Spiner";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicCreatorKeys } from "@/app/lib/queryKeys";
 import {
   type ComicCreatorsItemType,
   ComicCreatorsInfoTable,
@@ -20,13 +21,10 @@ export function ComicCreatorsInfoTableWrapper() {
   const router = useRouter();
 
   const requestUrl = "/api/comic-creators";
-  const { data, error, isValidating } = useApiData<ComicCreatorsApiType>(
+  const { data, error, isPending } = useApiQuery<ComicCreatorsApiType>({
+    queryKey: comicCreatorKeys.list(),
     requestUrl,
-    {
-      keepPreviousData: true,
-      fallbackData: undefined,
-    },
-  );
+  });
   const tableItems = data?.items && !error ? data.items : [];
 
   return (
@@ -34,7 +32,7 @@ export function ComicCreatorsInfoTableWrapper() {
       <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
         The Marvel comic creators
       </h1>
-      {isValidating && (
+      {isPending && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
           <Spinner />
         </div>

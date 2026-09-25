@@ -2,14 +2,15 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useRouter } from "next/navigation";
 import { ComicSeriesInfoTableWrapper } from "./ComicSeriesInfoTableWrapper";
-import { useApiData } from "@/app/hooks/useApiData";
+import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { comicSeriesKeys } from "@/app/lib/queryKeys";
 
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock("@/app/hooks/useApiData", () => ({
-  useApiData: jest.fn(),
+jest.mock("@/app/hooks/useApiQuery", () => ({
+  useApiQuery: jest.fn(),
 }));
 
 jest.mock("@/app/components/Spiner", () => ({
@@ -17,7 +18,7 @@ jest.mock("@/app/components/Spiner", () => ({
 }));
 
 const mockedUseRouter = jest.mocked(useRouter);
-const mockedUseApiData = jest.mocked(useApiData);
+const mockedUseApiQuery = jest.mocked(useApiQuery);
 const push = jest.fn();
 const router = {
   back: jest.fn(),
@@ -36,7 +37,7 @@ describe("ComicSeriesInfoTableWrapper", () => {
 
   it("loads series and navigates to the selected series", async () => {
     const user = userEvent.setup();
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         total: 1,
         limit: 20,
@@ -46,15 +47,15 @@ describe("ComicSeriesInfoTableWrapper", () => {
           { id: "series-303", name: "Uncanny X-Men", issueCount: 544 },
         ],
       },
-      error: undefined,
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicSeriesInfoTableWrapper />);
 
-    expect(mockedUseApiData).toHaveBeenCalledWith("/api/comic-series", {
-      keepPreviousData: true,
-      fallbackData: undefined,
+    expect(mockedUseApiQuery).toHaveBeenCalledWith({
+      queryKey: comicSeriesKeys.list(),
+      requestUrl: "/api/comic-series",
     });
     expect(
       screen.getByRole("heading", { name: "The Marvel comic series" }),
@@ -66,11 +67,11 @@ describe("ComicSeriesInfoTableWrapper", () => {
   });
 
   it("shows a spinner while series data is validating", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: undefined,
-      error: undefined,
-      isValidating: true,
-    } as ReturnType<typeof useApiData>);
+      error: null,
+      isPending: true,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicSeriesInfoTableWrapper />);
 
@@ -78,7 +79,7 @@ describe("ComicSeriesInfoTableWrapper", () => {
   });
 
   it("shows an error without rendering stale series rows", () => {
-    mockedUseApiData.mockReturnValue({
+    mockedUseApiQuery.mockReturnValue({
       data: {
         total: 1,
         limit: 20,
@@ -87,8 +88,8 @@ describe("ComicSeriesInfoTableWrapper", () => {
         items: [{ id: "stale-series", name: "Stale Series", issueCount: 1 }],
       },
       error: new Error("API unavailable"),
-      isValidating: false,
-    } as ReturnType<typeof useApiData>);
+      isPending: false,
+    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicSeriesInfoTableWrapper />);
 
