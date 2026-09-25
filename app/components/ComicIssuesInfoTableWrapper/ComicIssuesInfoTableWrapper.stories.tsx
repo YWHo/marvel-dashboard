@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { delay, http, HttpResponse } from "msw";
-import { SWRConfig } from "swr";
 import { ComicIssuesInfoTableWrapper } from "./ComicIssuesInfoTableWrapper";
 
 const issueItems = [
@@ -34,16 +33,9 @@ const meta = {
   component: ComicIssuesInfoTableWrapper,
   decorators: [
     (Story) => (
-      <SWRConfig
-        value={{
-          dedupingInterval: 0,
-          provider: () => new Map(),
-        }}
-      >
-        <main className="min-h-screen bg-black px-3 py-1 text-gray-100">
-          <Story />
-        </main>
-      </SWRConfig>
+      <main className="min-h-screen bg-black px-3 py-1 text-gray-100">
+        <Story />
+      </main>
     ),
   ],
 } satisfies Meta<typeof ComicIssuesInfoTableWrapper>;

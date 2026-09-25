@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, within } from "storybook/test";
 import { delay, http, HttpResponse } from "msw";
-import { SWRConfig } from "swr";
 import { ComicSeriesDetails } from "./ComicSeriesDetails";
 
 const apiUrl = "/api/comic-series/:seriesId";
@@ -14,16 +13,9 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <SWRConfig
-        value={{
-          dedupingInterval: 0,
-          provider: () => new Map(),
-        }}
-      >
-        <main className="min-h-screen bg-black px-3 py-1 text-gray-100">
-          <Story />
-        </main>
-      </SWRConfig>
+      <main className="min-h-screen bg-black px-3 py-1 text-gray-100">
+        <Story />
+      </main>
     ),
   ],
 } satisfies Meta<typeof ComicSeriesDetails>;
