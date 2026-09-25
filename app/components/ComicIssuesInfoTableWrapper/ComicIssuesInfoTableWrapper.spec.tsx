@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { keepPreviousData } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ComicIssuesInfoTableWrapper } from "./ComicIssuesInfoTableWrapper";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
+import { useInfiniteComicIssues } from "@/app/hooks/useInfiniteComicIssues";
 import {
   comicCreatorKeys,
   comicIssueKeys,
@@ -18,12 +18,18 @@ jest.mock("@/app/hooks/useApiQuery", () => ({
   useApiQuery: jest.fn(),
 }));
 
+jest.mock("@/app/hooks/useInfiniteComicIssues", () => ({
+  useInfiniteComicIssues: jest.fn(),
+}));
+
 jest.mock("@/app/components/Spiner", () => ({
   Spinner: () => <div>Loading comic issues</div>,
 }));
 
 const mockedUseRouter = jest.mocked(useRouter);
 const mockedUseApiQuery = jest.mocked(useApiQuery);
+const mockedUseInfiniteComicIssues = jest.mocked(useInfiniteComicIssues);
+const fetchNextPage = jest.fn();
 const push = jest.fn();
 const router = {
   back: jest.fn(),
@@ -35,60 +41,103 @@ const router = {
   bfcacheId: "test-router",
 } satisfies ReturnType<typeof useRouter>;
 
-const apiData = {
-  total: 1,
+const issue = {
+  id: "issue-303",
+  title: "Fantastic Four #1",
+  issueNumber: "1",
+  detailUrl: "https://example.test/issues/issue-303",
+  seriesId: 303,
+  seriesName: "Fantastic Four",
+  onSaleDate: new Date("1961-11-08T00:00:00.000Z"),
+  unlimitedDate: new Date("2007-11-13T00:00:00.000Z"),
+  yearPage: "1961",
+};
+
+const firstPage = {
+  total: 2,
   limit: 20,
   offset: 0,
-  has_next: false,
-  series_id: "series-303",
-  series_name: "Fantastic Four",
-  items: [
-    {
-      id: "issue-303",
-      title: "Fantastic Four #1",
-      issueNumber: "1",
-      detailUrl: "https://example.test/issues/issue-303",
-      seriesId: 303,
-      seriesName: "Fantastic Four",
-      onSaleDate: new Date("1961-11-08T00:00:00.000Z"),
-      unlimitedDate: new Date("2007-11-13T00:00:00.000Z"),
-      yearPage: "1961",
-    },
-  ],
+  has_next: true,
+  items: [issue],
 };
+
+function mockInfiniteQuery(overrides: Record<string, unknown> = {}) {
+  mockedUseInfiniteComicIssues.mockReturnValue({
+    data: { pages: [firstPage], pageParams: [0] },
+    error: null,
+    fetchNextPage,
+    hasNextPage: true,
+    isFetchingNextPage: false,
+    isPending: false,
+    ...overrides,
+  } as unknown as ReturnType<typeof useInfiniteComicIssues>);
+}
 
 describe("ComicIssuesInfoTableWrapper", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     mockedUseRouter.mockReturnValue(router);
+    mockInfiniteQuery();
+    mockedUseApiQuery.mockReturnValue({
+      data: undefined,
+      error: null,
+      isPending: true,
+    } as unknown as ReturnType<typeof useApiQuery>);
   });
 
-  it("loads issues, displays the series name, and navigates to an issue", async () => {
+  it("accumulates unique issue pages and navigates to a selected issue", async () => {
     const user = userEvent.setup();
-    mockedUseApiQuery.mockReturnValue({
-      data: apiData,
-      error: null,
-      isFetching: false,
-      isPending: false,
-      isPlaceholderData: false,
-    } as unknown as ReturnType<typeof useApiQuery>);
+    mockInfiniteQuery({
+      data: {
+        pages: [
+          firstPage,
+          {
+            ...firstPage,
+            offset: 20,
+            has_next: false,
+            items: [
+              issue,
+              { ...issue, id: "issue-404", title: "Fantastic Four #2" },
+            ],
+          },
+        ],
+        pageParams: [0, 20],
+      },
+      hasNextPage: false,
+    });
 
     render(<ComicIssuesInfoTableWrapper />);
 
-    expect(mockedUseApiQuery).toHaveBeenCalledWith({
-      queryKey: comicIssueKeys.list({ limit: 20, offset: 0 }),
-      requestUrl: "/api/comic-issues?limit=20&offset=0",
-      placeholderData: keepPreviousData,
+    expect(mockedUseInfiniteComicIssues).toHaveBeenCalledWith({
+      creatorId: undefined,
+      enabled: true,
+      limit: 20,
+      searchText: "",
+      seriesId: undefined,
     });
-    expect(
-      screen.getByRole("heading", { name: "The Marvel comic issues" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Fantastic Four" }),
-    ).toBeInTheDocument();
+    expect(screen.getAllByText("Fantastic Four #1")).toHaveLength(1);
+    expect(screen.getByText("Fantastic Four #2")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more" }))
+      .not.toBeInTheDocument();
 
     await user.click(screen.getByText("Fantastic Four #1"));
 
     expect(push).toHaveBeenCalledWith("/comic-issues/issue-303");
+  });
+
+  it("loads another page only while a next page is available", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<ComicIssuesInfoTableWrapper />);
+
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+
+    mockInfiniteQuery({ isFetchingNextPage: true });
+    rerender(<ComicIssuesInfoTableWrapper />);
+
+    expect(screen.getByRole("button", { name: "Loading more…" }))
+      .toBeDisabled();
   });
 
   it.each([
@@ -102,20 +151,17 @@ describe("ComicIssuesInfoTableWrapper", () => {
       expectedUrl: "/api/comic-series/series-202/issues",
       expectedQueryKey: comicSeriesKeys.issues("series-202"),
     },
-    {
-      props: { creatorId: "creator-101", seriesId: "series-202" },
-      expectedUrl: "/api/comic-creators/creator-101/issues",
-      expectedQueryKey: comicCreatorKeys.issues("creator-101"),
-    },
   ])(
-    "selects $expectedUrl as its data source",
+    "keeps $expectedUrl finite",
     ({ props, expectedUrl, expectedQueryKey }) => {
       mockedUseApiQuery.mockReturnValue({
-        data: { ...apiData, items: [] },
+        data: {
+          items: [issue],
+          series_id: "series-202",
+          series_name: "Fantastic Four",
+        },
         error: null,
-        isFetching: false,
         isPending: false,
-        isPlaceholderData: false,
       } as unknown as ReturnType<typeof useApiQuery>);
 
       render(<ComicIssuesInfoTableWrapper {...props} />);
@@ -123,101 +169,90 @@ describe("ComicIssuesInfoTableWrapper", () => {
       expect(mockedUseApiQuery).toHaveBeenCalledWith({
         queryKey: expectedQueryKey,
         requestUrl: expectedUrl,
-        placeholderData: undefined,
+        enabled: true,
       });
+      expect(mockedUseInfiniteComicIssues).toHaveBeenCalledWith({
+        creatorId: props.creatorId,
+        enabled: false,
+        limit: 20,
+        searchText: "",
+        seriesId: props.seriesId,
+      });
+      expect(screen.queryByRole("button", { name: "Load more" }))
+        .not.toBeInTheDocument();
       expect(
-        screen.queryByRole("navigation", { name: "Pagination" }),
-      ).not.toBeInTheDocument();
+        screen.getByRole("heading", { name: "Fantastic Four" }),
+      ).toBeInTheDocument();
     },
   );
 
-  it("loads title search results and restores all issues when cleared", async () => {
+  it("starts a fresh infinite query when search is entered or cleared", async () => {
     const user = userEvent.setup();
-    mockedUseApiQuery.mockReturnValue({
-      data: { ...apiData, has_next: true },
-      error: null,
-      isFetching: false,
-      isPending: false,
-      isPlaceholderData: false,
-    } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper showSearchBar />);
 
     const searchInput = screen.getByRole("searchbox", {
       name: "Search comic issues by title",
     });
-    await user.click(screen.getByRole("button", { name: "Next" }));
-
-    expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
-      queryKey: comicIssueKeys.list({ limit: 20, offset: 20 }),
-      requestUrl: "/api/comic-issues?limit=20&offset=20",
-      placeholderData: keepPreviousData,
-    });
-
     await user.type(searchInput, "  Spider Man  ");
     await user.click(screen.getByRole("button", { name: "Search" }));
 
-    expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
-      queryKey: comicIssueKeys.search({
-        limit: 20,
-        offset: 0,
-        query: "Spider Man",
-      }),
-      requestUrl:
-        "/api/comic-issues/search?limit=20&offset=0&q=Spider+Man",
-      placeholderData: keepPreviousData,
+    expect(mockedUseInfiniteComicIssues).toHaveBeenLastCalledWith({
+      creatorId: undefined,
+      enabled: true,
+      limit: 20,
+      searchText: "Spider Man",
+      seriesId: undefined,
     });
 
     await user.clear(searchInput);
 
-    expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
-      queryKey: comicIssueKeys.list({ limit: 20, offset: 0 }),
-      requestUrl: "/api/comic-issues?limit=20&offset=0",
-      placeholderData: keepPreviousData,
+    expect(mockedUseInfiniteComicIssues).toHaveBeenLastCalledWith({
+      creatorId: undefined,
+      enabled: true,
+      limit: 20,
+      searchText: "",
+      seriesId: undefined,
     });
   });
 
-  it("does not show search controls unless requested", () => {
-    mockedUseApiQuery.mockReturnValue({
-      data: { ...apiData, items: [] },
+  it("renders initial loading, error, and empty states", () => {
+    mockInfiniteQuery({
+      data: undefined,
       error: null,
-      isFetching: false,
-      isPending: false,
-      isPlaceholderData: false,
-    } as unknown as ReturnType<typeof useApiQuery>);
-
-    render(<ComicIssuesInfoTableWrapper />);
-
-    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
-  });
-
-  it("shows loading and error feedback without stale issue rows", () => {
-    mockedUseApiQuery.mockReturnValue({
-      data: apiData,
-      error: new Error("API unavailable"),
-      isFetching: false,
+      hasNextPage: false,
       isPending: true,
-      isPlaceholderData: false,
-    } as unknown as ReturnType<typeof useApiQuery>);
-
-    render(<ComicIssuesInfoTableWrapper />);
+    });
+    const { rerender } = render(<ComicIssuesInfoTableWrapper />);
 
     expect(screen.getByText("Loading comic issues")).toBeInTheDocument();
-    expect(screen.getByText("Failed to load")).toBeInTheDocument();
-    expect(screen.queryByText("Fantastic Four #1")).not.toBeInTheDocument();
-  });
 
-  it("renders an empty-data message for a successful empty response", () => {
-    mockedUseApiQuery.mockReturnValue({
-      data: { ...apiData, items: [] },
-      error: null,
-      isFetching: false,
+    mockInfiniteQuery({
+      data: undefined,
+      error: new Error("API unavailable"),
+      hasNextPage: false,
       isPending: false,
-      isPlaceholderData: false,
-    } as unknown as ReturnType<typeof useApiQuery>);
+    });
+    rerender(<ComicIssuesInfoTableWrapper />);
 
-    render(<ComicIssuesInfoTableWrapper />);
+    expect(screen.getByText("Failed to load")).toBeInTheDocument();
+
+    mockInfiniteQuery({
+      data: { pages: [{ ...firstPage, items: [] }], pageParams: [0] },
+      hasNextPage: false,
+    });
+    rerender(<ComicIssuesInfoTableWrapper />);
 
     expect(screen.getByText("(No data)")).toBeInTheDocument();
+  });
+
+  it("disables the finite query on the top-level list", () => {
+    render(<ComicIssuesInfoTableWrapper />);
+
+    expect(mockedUseApiQuery).toHaveBeenCalledWith({
+      queryKey: comicIssueKeys.list(),
+      requestUrl: "",
+      enabled: false,
+    });
   });
 });

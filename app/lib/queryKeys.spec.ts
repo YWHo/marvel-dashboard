@@ -65,6 +65,25 @@ describe("query keys", () => {
       "detail",
       "issue-101",
     ]);
+    expect(
+      comicIssueKeys.infinite({
+        endpointMode: "search",
+        searchText: "Spider Man",
+        creatorId: "",
+        seriesId: "",
+        limit: 20,
+      }),
+    ).toEqual([
+      "comic-issues",
+      "infinite",
+      {
+        endpointMode: "search",
+        searchText: "Spider Man",
+        creatorId: "",
+        seriesId: "",
+        limit: 20,
+      },
+    ]);
   });
 
   it("builds comic series keys", () => {

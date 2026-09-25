@@ -1,14 +1,12 @@
 "use client";
 
 import clsx from "clsx";
-import { keepPreviousData } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PaginationControls } from "@/app/components/PaginationControls";
 import { Spinner } from "@/app/components/Spiner";
 import { SearchBox } from "@/app/components/SearchBox";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
-import { buildApiUrl } from "@/app/lib/api";
+import { useInfiniteComicIssues } from "@/app/hooks/useInfiniteComicIssues";
 import { COMIC_LIST_PAGE_LIMIT } from "@/app/lib/constants";
 import {
   comicCreatorKeys,
@@ -17,9 +15,9 @@ import {
 } from "@/app/lib/queryKeys";
 import { ComicIssuesInfoTable } from "@/app/components/ComicIssuesInfoTable";
 import type { ComicIssueItemType } from "@/app/components/ComicIssueItemDetails";
-import type { PaginatedResponse } from "@/app/lib/type-definitions";
 
-type ComicIssuesApiType = PaginatedResponse<ComicIssueItemType> & {
+type EmbeddedComicIssuesApiType = {
+  items: ComicIssueItemType[];
   series_id?: string;
   series_name?: string;
 };
@@ -38,42 +36,44 @@ export function ComicIssuesInfoTableWrapper({
   showSearchBar = false,
 }: ComicIssuesInfoTableWrapperProps) {
   const [searchString, setSearchString] = useState("");
-  const [offset, setOffset] = useState(0);
-  const headingRef = useRef<HTMLHeadingElement>(null);
   const router = useRouter();
   const isTopLevelList = !creatorId && !seriesId;
 
-  const requestOptions = getRequestOptions({
+  const infiniteQuery = useInfiniteComicIssues({
     creatorId,
+    enabled: isTopLevelList,
     limit: COMIC_LIST_PAGE_LIMIT,
-    offset,
+    searchText: searchString,
     seriesId,
-    searchString,
+  });
+  const embeddedRequest = getEmbeddedRequestOptions({ creatorId, seriesId });
+  const embeddedQuery = useApiQuery<EmbeddedComicIssuesApiType>({
+    queryKey: embeddedRequest.queryKey,
+    requestUrl: embeddedRequest.requestUrl,
+    enabled: !isTopLevelList,
   });
 
-  const { data, error, isFetching, isPending, isPlaceholderData } =
-    useApiQuery<ComicIssuesApiType>({
-      queryKey: requestOptions.queryKey,
-      requestUrl: requestOptions.requestUrl,
-      placeholderData: isTopLevelList ? keepPreviousData : undefined,
-    });
-
-  const tableItems = data?.items && !error ? data.items : [];
-  const seriesName = data?.series_name && !error ? data.series_name : undefined;
-  const isPageFetching = isTopLevelList && isFetching && !isPending;
-
-  const handlePageChange = (nextOffset: number) => {
-    setOffset(nextOffset);
-    headingRef.current?.focus();
-  };
+  const error = isTopLevelList ? infiniteQuery.error : embeddedQuery.error;
+  const isPending = isTopLevelList
+    ? infiniteQuery.isPending
+    : embeddedQuery.isPending;
+  const tableItems = isTopLevelList
+    ? getUniqueIssues(
+        infiniteQuery.data?.pages.flatMap((page) => page.items) ?? [],
+      )
+    : embeddedQuery.data?.items && !embeddedQuery.error
+      ? embeddedQuery.data.items
+      : [];
+  const seriesName =
+    !isTopLevelList && embeddedQuery.data?.series_name && !embeddedQuery.error
+      ? embeddedQuery.data.series_name
+      : undefined;
+  const canLoadMore =
+    infiniteQuery.hasNextPage && !infiniteQuery.isFetchingNextPage;
 
   return (
     <div className={clsx("relative min-h-[100px] max-w-5xl", className)}>
-      <h1
-        ref={headingRef}
-        tabIndex={-1}
-        className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold focus:outline-none"
-      >
+      <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
         The Marvel comic issues
       </h1>
       {seriesName && (
@@ -84,10 +84,7 @@ export function ComicIssuesInfoTableWrapper({
           <SearchBox
             inputLabel="Search comic issues by title"
             placeholder="Search comic issues..."
-            onSearchCallback={(nextSearchString) => {
-              setOffset(0);
-              setSearchString(nextSearchString);
-            }}
+            onSearchCallback={setSearchString}
           />
         </div>
       )}
@@ -109,52 +106,36 @@ export function ComicIssuesInfoTableWrapper({
         {!isPending && tableItems.length == 0 && (
           <div className="w-100 text-center">(No data)</div>
         )}
-        {!isPending && !error && isTopLevelList && (
-          <PaginationControls
-            hasNextPage={data?.has_next ?? false}
-            isFetching={isPageFetching || isPlaceholderData}
-            itemCount={tableItems.length}
-            limit={COMIC_LIST_PAGE_LIMIT}
-            offset={offset}
-            onPageChange={handlePageChange}
-            total={data?.total ?? 0}
-          />
-        )}
+        {!isPending &&
+          !error &&
+          isTopLevelList &&
+          infiniteQuery.hasNextPage && (
+            <button
+              type="button"
+              disabled={!canLoadMore}
+              onClick={() => {
+                if (canLoadMore) void infiniteQuery.fetchNextPage();
+              }}
+              className="mt-5 min-w-40 rounded-lg border border-blue-400/60 bg-blue-900 px-5 py-2.5 font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300 disabled:cursor-not-allowed disabled:border-gray-700 disabled:bg-gray-800 disabled:text-gray-400"
+            >
+              {infiniteQuery.isFetchingNextPage
+                ? "Loading more…"
+                : "Load more"}
+            </button>
+          )}
         <div className="my-8">&nbsp;</div>
       </section>
     </div>
   );
 }
 
-function getRequestOptions({
+function getEmbeddedRequestOptions({
   creatorId,
-  limit,
-  offset,
   seriesId,
-  searchString,
 }: {
   creatorId?: string;
-  limit: number;
-  offset: number;
   seriesId?: string;
-  searchString?: string;
 }) {
-  const normalizedSearchString = searchString?.trim();
-  const pagination = { limit, offset };
-
-  if (normalizedSearchString) {
-    return {
-      queryKey: comicIssueKeys.search({
-        ...pagination,
-        query: normalizedSearchString,
-      }),
-      requestUrl: buildApiUrl("/api/comic-issues/search", {
-        ...pagination,
-        q: normalizedSearchString,
-      }),
-    };
-  }
-
   if (creatorId) {
     return {
       queryKey: comicCreatorKeys.issues(creatorId),
@@ -170,7 +151,11 @@ function getRequestOptions({
   }
 
   return {
-    queryKey: comicIssueKeys.list(pagination),
-    requestUrl: buildApiUrl("/api/comic-issues", pagination),
+    queryKey: comicIssueKeys.list(),
+    requestUrl: "",
   };
+}
+
+function getUniqueIssues(items: ComicIssueItemType[]) {
+  return Array.from(new Map(items.map((item) => [item.id, item])).values());
 }

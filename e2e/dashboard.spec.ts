@@ -67,17 +67,11 @@ test("renders the Issues page with issue data", async ({ page }) => {
     "page",
   );
 
-  const previousButton = page.getByRole("button", { name: "Previous" });
-  const nextButton = page.getByRole("button", { name: "Next", exact: true });
-  await expect(previousButton).toBeDisabled();
-  await nextButton.click();
+  const loadMoreButton = page.getByRole("button", { name: "Load more" });
+  await loadMoreButton.click();
   await expect(page.getByText("The Avengers #1")).toBeVisible();
-  await expect(nextButton).toBeDisabled();
-  await expect(
-    page.getByRole("heading", { name: "The Marvel comic issues" }),
-  ).toBeFocused();
-  await previousButton.click();
   await expect(page.getByText("Amazing Fantasy #15")).toBeVisible();
+  await expect(loadMoreButton).not.toBeVisible();
 
   await page
     .getByRole("searchbox", { name: "Search comic issues by title" })
