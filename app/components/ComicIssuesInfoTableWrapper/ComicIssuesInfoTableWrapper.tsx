@@ -1,12 +1,15 @@
 "use client";
 
 import clsx from "clsx";
-import { useState } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PaginationControls } from "@/app/components/PaginationControls";
 import { Spinner } from "@/app/components/Spiner";
 import { SearchBox } from "@/app/components/SearchBox";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
 import { buildApiUrl } from "@/app/lib/api";
+import { COMIC_LIST_PAGE_LIMIT } from "@/app/lib/constants";
 import {
   comicCreatorKeys,
   comicIssueKeys,
@@ -35,26 +38,42 @@ export function ComicIssuesInfoTableWrapper({
   showSearchBar = false,
 }: ComicIssuesInfoTableWrapperProps) {
   const [searchString, setSearchString] = useState("");
+  const [offset, setOffset] = useState(0);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const router = useRouter();
+  const isTopLevelList = !creatorId && !seriesId;
 
   const requestOptions = getRequestOptions({
     creatorId,
+    limit: COMIC_LIST_PAGE_LIMIT,
+    offset,
     seriesId,
     searchString,
   });
 
-  const { data, error, isPending } = useApiQuery<ComicIssuesApiType>({
-    queryKey: requestOptions.queryKey,
-    requestUrl: requestOptions.requestUrl,
-  });
+  const { data, error, isFetching, isPending, isPlaceholderData } =
+    useApiQuery<ComicIssuesApiType>({
+      queryKey: requestOptions.queryKey,
+      requestUrl: requestOptions.requestUrl,
+      placeholderData: isTopLevelList ? keepPreviousData : undefined,
+    });
 
   const tableItems = data?.items && !error ? data.items : [];
-
   const seriesName = data?.series_name && !error ? data.series_name : undefined;
+  const isPageFetching = isTopLevelList && isFetching && !isPending;
+
+  const handlePageChange = (nextOffset: number) => {
+    setOffset(nextOffset);
+    headingRef.current?.focus();
+  };
 
   return (
     <div className={clsx("relative min-h-[100px] max-w-5xl", className)}>
-      <h1 className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold">
+      <h1
+        ref={headingRef}
+        tabIndex={-1}
+        className="text-3xl m-4 text-center text-blue-200 font-serif font-extrabold focus:outline-none"
+      >
         The Marvel comic issues
       </h1>
       {seriesName && (
@@ -65,7 +84,10 @@ export function ComicIssuesInfoTableWrapper({
           <SearchBox
             inputLabel="Search comic issues by title"
             placeholder="Search comic issues..."
-            onSearchCallback={setSearchString}
+            onSearchCallback={(nextSearchString) => {
+              setOffset(0);
+              setSearchString(nextSearchString);
+            }}
           />
         </div>
       )}
@@ -87,6 +109,17 @@ export function ComicIssuesInfoTableWrapper({
         {!isPending && tableItems.length == 0 && (
           <div className="w-100 text-center">(No data)</div>
         )}
+        {!isPending && !error && isTopLevelList && (
+          <PaginationControls
+            hasNextPage={data?.has_next ?? false}
+            isFetching={isPageFetching || isPlaceholderData}
+            itemCount={tableItems.length}
+            limit={COMIC_LIST_PAGE_LIMIT}
+            offset={offset}
+            onPageChange={handlePageChange}
+            total={data?.total ?? 0}
+          />
+        )}
         <div className="my-8">&nbsp;</div>
       </section>
     </div>
@@ -95,15 +128,19 @@ export function ComicIssuesInfoTableWrapper({
 
 function getRequestOptions({
   creatorId,
+  limit,
+  offset,
   seriesId,
   searchString,
 }: {
   creatorId?: string;
+  limit: number;
+  offset: number;
   seriesId?: string;
   searchString?: string;
 }) {
   const normalizedSearchString = searchString?.trim();
-  const pagination = { limit: 20, offset: 0 };
+  const pagination = { limit, offset };
 
   if (normalizedSearchString) {
     return {

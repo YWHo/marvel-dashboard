@@ -72,6 +72,43 @@ export const AllIssues: Story = {
   },
 };
 
+export const Paginated: Story = {
+  parameters: {
+    msw: [
+      http.get("/api/comic-issues", ({ request }) => {
+        const offset = Number(new URL(request.url).searchParams.get("offset"));
+        const isSecondPage = offset === 20;
+
+        return HttpResponse.json({
+          total: 21,
+          limit: 20,
+          offset,
+          has_next: !isSecondPage,
+          items: [isSecondPage ? issueItems[1] : issueItems[0]],
+        });
+      }),
+    ],
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+    const previousButton = await canvas.findByRole("button", {
+      name: "Previous",
+    });
+    const nextButton = canvas.getByRole("button", { name: "Next" });
+
+    await expect(previousButton).toBeDisabled();
+    await expect(
+      await canvas.findByText("Amazing Fantasy #15"),
+    ).toBeInTheDocument();
+    await userEvent.click(nextButton);
+    await expect(await canvas.findByText("The Avengers #1")).toBeInTheDocument();
+    await expect(nextButton).toBeDisabled();
+    await expect(
+      canvas.getByRole("heading", { name: "The Marvel comic issues" }),
+    ).toHaveFocus();
+  },
+};
+
 export const IssuesByCreator: Story = {
   args: {
     creatorId: "creator-101",

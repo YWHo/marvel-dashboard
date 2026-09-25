@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import { delay, http, HttpResponse } from "msw";
 import { ComicCreatorsInfoTableWrapper } from "./ComicCreatorsInfoTableWrapper";
 
@@ -51,6 +51,47 @@ export const Populated: Story = {
     ).toBeInTheDocument();
     await expect(await canvas.findByText("Stan Lee")).toBeInTheDocument();
     await expect(canvas.getAllByRole("row")).toHaveLength(4);
+  },
+};
+
+export const Paginated: Story = {
+  parameters: {
+    msw: [
+      http.get(apiUrl, ({ request }) => {
+        const offset = Number(new URL(request.url).searchParams.get("offset"));
+        const isSecondPage = offset === 20;
+
+        return HttpResponse.json({
+          total: 21,
+          limit: 20,
+          offset,
+          has_next: !isSecondPage,
+          items: [
+            isSecondPage
+              ? { id: "creator-202", name: "Jack Kirby", issueCount: 680 }
+              : { id: "creator-101", name: "Stan Lee", issueCount: 1559 },
+          ],
+        });
+      }),
+    ],
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+    const previousButton = await canvas.findByRole("button", {
+      name: "Previous",
+    });
+    const nextButton = canvas.getByRole("button", { name: "Next" });
+
+    await expect(previousButton).toBeDisabled();
+    await expect(await canvas.findByText("Stan Lee")).toBeInTheDocument();
+    await userEvent.click(nextButton);
+    await expect(await canvas.findByText("Jack Kirby")).toBeInTheDocument();
+    await expect(nextButton).toBeDisabled();
+    await expect(
+      canvas.getByRole("heading", { name: "The Marvel comic creators" }),
+    ).toHaveFocus();
+    await userEvent.click(previousButton);
+    await expect(await canvas.findByText("Stan Lee")).toBeInTheDocument();
   },
 };
 

@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { keepPreviousData } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ComicIssuesInfoTableWrapper } from "./ComicIssuesInfoTableWrapper";
 import { useApiQuery } from "@/app/hooks/useApiQuery";
@@ -66,7 +67,9 @@ describe("ComicIssuesInfoTableWrapper", () => {
     mockedUseApiQuery.mockReturnValue({
       data: apiData,
       error: null,
+      isFetching: false,
       isPending: false,
+      isPlaceholderData: false,
     } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper />);
@@ -74,6 +77,7 @@ describe("ComicIssuesInfoTableWrapper", () => {
     expect(mockedUseApiQuery).toHaveBeenCalledWith({
       queryKey: comicIssueKeys.list({ limit: 20, offset: 0 }),
       requestUrl: "/api/comic-issues?limit=20&offset=0",
+      placeholderData: keepPreviousData,
     });
     expect(
       screen.getByRole("heading", { name: "The Marvel comic issues" }),
@@ -109,7 +113,9 @@ describe("ComicIssuesInfoTableWrapper", () => {
       mockedUseApiQuery.mockReturnValue({
         data: { ...apiData, items: [] },
         error: null,
+        isFetching: false,
         isPending: false,
+        isPlaceholderData: false,
       } as unknown as ReturnType<typeof useApiQuery>);
 
       render(<ComicIssuesInfoTableWrapper {...props} />);
@@ -117,16 +123,22 @@ describe("ComicIssuesInfoTableWrapper", () => {
       expect(mockedUseApiQuery).toHaveBeenCalledWith({
         queryKey: expectedQueryKey,
         requestUrl: expectedUrl,
+        placeholderData: undefined,
       });
+      expect(
+        screen.queryByRole("navigation", { name: "Pagination" }),
+      ).not.toBeInTheDocument();
     },
   );
 
   it("loads title search results and restores all issues when cleared", async () => {
     const user = userEvent.setup();
     mockedUseApiQuery.mockReturnValue({
-      data: { ...apiData, items: [] },
+      data: { ...apiData, has_next: true },
       error: null,
+      isFetching: false,
       isPending: false,
+      isPlaceholderData: false,
     } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper showSearchBar />);
@@ -134,6 +146,14 @@ describe("ComicIssuesInfoTableWrapper", () => {
     const searchInput = screen.getByRole("searchbox", {
       name: "Search comic issues by title",
     });
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
+      queryKey: comicIssueKeys.list({ limit: 20, offset: 20 }),
+      requestUrl: "/api/comic-issues?limit=20&offset=20",
+      placeholderData: keepPreviousData,
+    });
+
     await user.type(searchInput, "  Spider Man  ");
     await user.click(screen.getByRole("button", { name: "Search" }));
 
@@ -145,6 +165,7 @@ describe("ComicIssuesInfoTableWrapper", () => {
       }),
       requestUrl:
         "/api/comic-issues/search?limit=20&offset=0&q=Spider+Man",
+      placeholderData: keepPreviousData,
     });
 
     await user.clear(searchInput);
@@ -152,6 +173,7 @@ describe("ComicIssuesInfoTableWrapper", () => {
     expect(mockedUseApiQuery).toHaveBeenLastCalledWith({
       queryKey: comicIssueKeys.list({ limit: 20, offset: 0 }),
       requestUrl: "/api/comic-issues?limit=20&offset=0",
+      placeholderData: keepPreviousData,
     });
   });
 
@@ -159,7 +181,9 @@ describe("ComicIssuesInfoTableWrapper", () => {
     mockedUseApiQuery.mockReturnValue({
       data: { ...apiData, items: [] },
       error: null,
+      isFetching: false,
       isPending: false,
+      isPlaceholderData: false,
     } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper />);
@@ -171,7 +195,9 @@ describe("ComicIssuesInfoTableWrapper", () => {
     mockedUseApiQuery.mockReturnValue({
       data: apiData,
       error: new Error("API unavailable"),
+      isFetching: false,
       isPending: true,
+      isPlaceholderData: false,
     } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper />);
@@ -185,7 +211,9 @@ describe("ComicIssuesInfoTableWrapper", () => {
     mockedUseApiQuery.mockReturnValue({
       data: { ...apiData, items: [] },
       error: null,
+      isFetching: false,
       isPending: false,
+      isPlaceholderData: false,
     } as unknown as ReturnType<typeof useApiQuery>);
 
     render(<ComicIssuesInfoTableWrapper />);
