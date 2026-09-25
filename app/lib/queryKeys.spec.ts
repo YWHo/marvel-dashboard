@@ -49,16 +49,11 @@ describe("query keys", () => {
     ]);
   });
 
-  it("separates issue lists, searches, and details", () => {
+  it("separates finite lists, infinite lists, and details", () => {
     expect(comicIssueKeys.list({ limit: 20 })).toEqual([
       "comic-issues",
       "list",
       { limit: 20 },
-    ]);
-    expect(comicIssueKeys.search({ query: "Spider Man" })).toEqual([
-      "comic-issues",
-      "search",
-      { query: "Spider Man" },
     ]);
     expect(comicIssueKeys.detail("issue-101")).toEqual([
       "comic-issues",

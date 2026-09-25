@@ -41,8 +41,6 @@ export const comicIssueKeys = {
     [...comicIssueKeys.lists(), parameters] as const,
   infinite: (parameters: QueryParameters) =>
     [...comicIssueKeys.all, "infinite", parameters] as const,
-  search: (parameters: QueryParameters) =>
-    [...comicIssueKeys.all, "search", parameters] as const,
   details: () => [...comicIssueKeys.all, "detail"] as const,
   detail: (issueId: string) =>
     [...comicIssueKeys.details(), issueId] as const,

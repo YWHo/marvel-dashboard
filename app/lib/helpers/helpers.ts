@@ -1,4 +1,3 @@
-import { createHash } from "crypto";
 import parseHtml from "html-react-parser";
 import { InfoList, MarvelResponseDataResultType, MarvelResponseDataResultThumbnailType } from "@/app/lib/type-definitions";
 import { getCache, setCache } from "../cacheHelper";
@@ -56,10 +55,7 @@ export function getServerCacheKey(reqUrl: string, targetBaseUrl: string): string
 }
 
 export function getTargetUrl(reqUrl: string, targetBaseUrl: string): string {
-  // const apiKeyPublic = process.env.MARVEL_ACCESS_PUBLIC_KEY;
-  // const apiKeyPrivate = process.env.MARVEL_ACCESS_PRIVATE_KEY;
   const timeStamp = getTimestamp("iso");
-  // const hash = generateMD5(`${timeStamp}`);
   const urlObject = new URL(targetBaseUrl);
 
   // Append incoming query parameters to the target URL
@@ -70,8 +66,6 @@ export function getTargetUrl(reqUrl: string, targetBaseUrl: string): string {
 
   // Add new query parameters
   urlObject.searchParams.append("ts", timeStamp as string);
-  // urlObject.searchParams.append("apikey", apiKeyPublic as string);
-  // urlObject.searchParams.append("hash", hash);
 
   return urlObject.toString();
 }
@@ -98,15 +92,6 @@ export function getTimestamp(
     default:
       throw new Error("Unsupported timestamp format");
   }
-}
-
-/**
- * Generates an MD5 hash for the given input.
- * @param input - The input string to hash.
- * @returns The MD5 hash as a hexadecimal string.
- */
-export function generateMD5(input: string): string {
-  return createHash("md5").update(input).digest("hex");
 }
 
 /**
