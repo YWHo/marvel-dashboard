@@ -48,7 +48,9 @@ The tradeoff is a larger API surface and an application provider. SWR would rema
 
 ## Upstream Data
 
-The official Marvel API is no longer available. This project uses the unofficial [Marvel Comics API](https://marvel.emreparker.com), whose source is available at [emreparker/marvel-comics](https://github.com/emreparker/marvel-comics). No API credentials are required.
+This project originally used the official Marvel API, but that service has been shut down and is no longer available. To keep the dashboard functional, it now uses the unofficial [Marvel Comics API](https://marvel.emreparker.com).
+
+The alternative API's source code is available in the [emreparker/marvel-comics](https://github.com/emreparker/marvel-comics) repository. It is unauthenticated, so no API credentials are required to run this project.
 
 ## Local Development
 
