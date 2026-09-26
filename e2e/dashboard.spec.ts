@@ -1,7 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
 test("renders the landing page and links to comic issues", async ({ page }) => {
-  await mockJson(page, "/api/comic-issues", { items: [] });
+  await mockJson(page, "/api/comic-issues", {
+    total: 0,
+    limit: 20,
+    offset: 0,
+    has_next: false,
+    items: [],
+  });
   await page.goto("/");
 
   await expect(
@@ -19,25 +25,29 @@ test("renders the landing page and links to comic issues", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "The Marvel comic issues" }),
   ).toBeVisible();
+  const issuesToolbar = page.getByRole("banner");
+  await expect(issuesToolbar).toHaveCSS("position", "sticky");
+  await expect(
+    issuesToolbar.getByRole("searchbox", {
+      name: "Search comic issues by title",
+    }),
+  ).toBeVisible();
 });
 
 test("renders the Issues page with issue data", async ({ page }) => {
-  await mockJson(page, "/api/comic-issues", {
-    items: [
-      {
-        id: "issue-101",
-        title: "Amazing Fantasy #15",
-        issueNumber: "15",
-        detailUrl: "https://example.test/issues/issue-101",
-        seriesId: 1001,
-        seriesName: "Amazing Fantasy",
-        onSaleDate: "1962-08-10T12:00:00.000Z",
-        unlimitedDate: "2007-11-13T12:00:00.000Z",
-        yearPage: "1962",
-      },
-    ],
-  });
+  const requestedOffsets: string[] = [];
+  await mockPaginatedJson(
+    page,
+    "/api/comic-issues",
+    paginatedPayload(issue("issue-101", "Amazing Fantasy #15"), true, 0),
+    paginatedPayload(issue("issue-303", "The Avengers #1"), false, 20),
+    (offset) => requestedOffsets.push(offset),
+  );
   await mockJson(page, "/api/comic-issues/search", {
+    total: 1,
+    limit: 20,
+    offset: 0,
+    has_next: false,
     items: [
       {
         id: "issue-202",
@@ -66,6 +76,17 @@ test("renders the Issues page with issue data", async ({ page }) => {
     "page",
   );
 
+  await expect(page.getByText("The Avengers #1")).toBeVisible();
+  await expect(page.getByText("Amazing Fantasy #15")).toBeVisible();
+  await expect(page.getByText("End of comic issues.")).toBeVisible();
+  expect(requestedOffsets.filter((offset) => offset === "20")).toHaveLength(1);
+  const requestCountAtCompletion = requestedOffsets.length;
+
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.mouse.wheel(0, 500);
+  await page.waitForTimeout(300);
+  expect(requestedOffsets).toHaveLength(requestCountAtCompletion);
+
   await page
     .getByRole("searchbox", { name: "Search comic issues by title" })
     .fill("Spider Man");
@@ -84,19 +105,20 @@ test("renders the Issues page with issue data", async ({ page }) => {
 });
 
 test("renders the Series page with series data", async ({ page }) => {
-  await mockJson(page, "/api/comic-series", {
-    total: 1,
-    limit: 20,
-    offset: 0,
-    has_next: false,
-    items: [
-      {
-        id: "series-202",
-        name: "The Amazing Spider-Man",
-        issueCount: 1234,
-      },
-    ],
-  });
+  await mockPaginatedJson(
+    page,
+    "/api/comic-series",
+    paginatedPayload(
+      { id: "series-202", name: "The Amazing Spider-Man", issueCount: 1234 },
+      true,
+      0,
+    ),
+    paginatedPayload(
+      { id: "series-303", name: "Fantastic Four", issueCount: 416 },
+      false,
+      20,
+    ),
+  );
 
   await page.goto("/comic-series");
 
@@ -110,16 +132,33 @@ test("renders the Series page with series data", async ({ page }) => {
     "aria-current",
     "page",
   );
+
+  const previousButton = page.getByRole("button", { name: "Previous" });
+  const nextButton = page.getByRole("button", { name: "Next", exact: true });
+  await expect(
+    page.getByRole("banner").getByRole("navigation", { name: "Pagination" }),
+  ).toBeVisible();
+  await expect(previousButton).toBeDisabled();
+  await nextButton.click();
+  await expect(page.getByText("Fantastic Four")).toBeVisible();
+  await expect(nextButton).toBeDisabled();
 });
 
 test("renders the Creators page with creator data", async ({ page }) => {
-  await mockJson(page, "/api/comic-creators", {
-    total: 1,
-    limit: 20,
-    offset: 0,
-    has_next: false,
-    items: [{ id: "creator-303", name: "Stan Lee", issueCount: 1559 }],
-  });
+  await mockPaginatedJson(
+    page,
+    "/api/comic-creators",
+    paginatedPayload(
+      { id: "creator-303", name: "Stan Lee", issueCount: 1559 },
+      true,
+      0,
+    ),
+    paginatedPayload(
+      { id: "creator-404", name: "Jack Kirby", issueCount: 680 },
+      false,
+      20,
+    ),
+  );
 
   await page.goto("/comic-creators");
 
@@ -133,13 +172,64 @@ test("renders the Creators page with creator data", async ({ page }) => {
     "aria-current",
     "page",
   );
+
+  const previousButton = page.getByRole("button", { name: "Previous" });
+  const nextButton = page.getByRole("button", { name: "Next", exact: true });
+  await expect(
+    page.getByRole("banner").getByRole("navigation", { name: "Pagination" }),
+  ).toBeVisible();
+  await expect(previousButton).toBeDisabled();
+  await nextButton.click();
+  await expect(page.getByText("Jack Kirby")).toBeVisible();
+  await expect(nextButton).toBeDisabled();
 });
+
+function issue(id: string, title: string) {
+  return {
+    id,
+    title,
+    issueNumber: "1",
+    detailUrl: `https://example.test/issues/${id}`,
+    seriesId: 1001,
+    seriesName: title,
+    onSaleDate: "1962-08-10T12:00:00.000Z",
+    unlimitedDate: "2007-11-13T12:00:00.000Z",
+    yearPage: "1962",
+  };
+}
+
+function paginatedPayload<T>(item: T, hasNext: boolean, offset: number) {
+  return {
+    total: 21,
+    limit: 20,
+    offset,
+    has_next: hasNext,
+    items: [item],
+  };
+}
 
 async function mockJson(page: Page, pathname: string, payload: unknown) {
   await page.route(
     (url) => url.pathname === pathname,
     async (route) => {
       await route.fulfill({ json: payload });
+    },
+  );
+}
+
+async function mockPaginatedJson(
+  page: Page,
+  pathname: string,
+  firstPage: unknown,
+  secondPage: unknown,
+  onRequest?: (offset: string) => void,
+) {
+  await page.route(
+    (url) => url.pathname === pathname,
+    async (route) => {
+      const offset = new URL(route.request().url()).searchParams.get("offset");
+      onRequest?.(offset ?? "0");
+      await route.fulfill({ json: offset === "20" ? secondPage : firstPage });
     },
   );
 }

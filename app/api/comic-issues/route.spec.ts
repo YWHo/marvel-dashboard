@@ -21,16 +21,21 @@ const mockedGetTargetUrl = jest.mocked(getTargetUrl);
 
 describe("GET /api/comic-issues", () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     mockedGetTargetUrl.mockReturnValue("https://example.test/v1/issues");
     mockedGetServerCacheKey.mockReturnValue("comic-issues-cache-key");
   });
 
-  it("returns the comic-issue list payload", async () => {
+  it.each([
+    { page: "first", limit: 20, offset: 0, total: 45, hasNext: true },
+    { page: "middle", limit: 20, offset: 20, total: 45, hasNext: true },
+    { page: "final", limit: 20, offset: 40, total: 45, hasNext: false },
+  ])("returns the $page issue page", async ({ limit, offset, total, hasNext }) => {
     const payload = {
-      total: faker.number.int({ min: 2, max: 500 }),
-      limit: 20,
-      offset: 0,
-      has_next: faker.datatype.boolean(),
+      total,
+      limit,
+      offset,
+      has_next: hasNext,
       items: Array.from({ length: 2 }, () => ({
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
@@ -45,7 +50,7 @@ describe("GET /api/comic-issues", () => {
     };
     mockedFetchData.mockResolvedValue({ data: payload });
     const request = new NextRequest(
-      "http://localhost/api/comic-issues?limit=20&offset=0",
+      `http://localhost/api/comic-issues?limit=${limit}&offset=${offset}&orderBy=-title`,
     );
 
     const response = await GET(request);
@@ -53,6 +58,10 @@ describe("GET /api/comic-issues", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual(payload);
     expect(mockedGetTargetUrl).toHaveBeenCalledWith(
+      request.url,
+      expect.stringContaining("/v1/issues"),
+    );
+    expect(mockedGetServerCacheKey).toHaveBeenCalledWith(
       request.url,
       expect.stringContaining("/v1/issues"),
     );

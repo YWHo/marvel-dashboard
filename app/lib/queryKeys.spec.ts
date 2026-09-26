@@ -1,39 +1,10 @@
 import {
-  characterKeys,
   comicCreatorKeys,
   comicIssueKeys,
   comicSeriesKeys,
 } from "./queryKeys";
 
 describe("query keys", () => {
-  it("builds character keys with every response parameter", () => {
-    expect(characterKeys.list({ limit: 20, offset: 40 })).toEqual([
-      "characters",
-      "list",
-      { limit: 20, offset: 40 },
-    ]);
-    expect(characterKeys.comics("character-101", { orderBy: "title" })).toEqual(
-      [
-        "characters",
-        "detail",
-        "character-101",
-        "comics",
-        { orderBy: "title" },
-      ],
-    );
-    expect(
-      characterKeys.resource("/api/characters/character-101/events", {
-        limit: 10,
-        offset: 20,
-      }),
-    ).toEqual([
-      "characters",
-      "resource",
-      "/api/characters/character-101/events",
-      { limit: 10, offset: 20 },
-    ]);
-  });
-
   it("builds comic creator keys", () => {
     expect(comicCreatorKeys.detail("creator-101")).toEqual([
       "comic-creators",
@@ -49,21 +20,35 @@ describe("query keys", () => {
     ]);
   });
 
-  it("separates issue lists, searches, and details", () => {
+  it("separates finite lists, infinite lists, and details", () => {
     expect(comicIssueKeys.list({ limit: 20 })).toEqual([
       "comic-issues",
       "list",
       { limit: 20 },
     ]);
-    expect(comicIssueKeys.search({ query: "Spider Man" })).toEqual([
-      "comic-issues",
-      "search",
-      { query: "Spider Man" },
-    ]);
     expect(comicIssueKeys.detail("issue-101")).toEqual([
       "comic-issues",
       "detail",
       "issue-101",
+    ]);
+    expect(
+      comicIssueKeys.infinite({
+        endpointMode: "search",
+        searchText: "Spider Man",
+        creatorId: "",
+        seriesId: "",
+        limit: 20,
+      }),
+    ).toEqual([
+      "comic-issues",
+      "infinite",
+      {
+        endpointMode: "search",
+        searchText: "Spider Man",
+        creatorId: "",
+        seriesId: "",
+        limit: 20,
+      },
     ]);
   });
 

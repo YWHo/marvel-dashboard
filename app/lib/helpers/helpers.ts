@@ -1,47 +1,4 @@
-import { createHash } from "crypto";
-import parseHtml from "html-react-parser";
-import { InfoList, MarvelResponseDataResultType, MarvelResponseDataResultThumbnailType } from "@/app/lib/type-definitions";
 import { getCache, setCache } from "../cacheHelper";
-
-export function mapToInfoList(items: MarvelResponseDataResultType[]): InfoList {
-  if (!items) return [];
-  return Array.from(items).map((item) => {
-    let description = "";
-    if (typeof item.description == "string" && item.description.length > 0) {
-      description = item.description;
-    } else if (
-      Array.isArray(item.textObjects) &&
-      item.textObjects?.length > 0 &&
-      typeof item.textObjects[0] == "object" &&
-      typeof item.textObjects[0].text == "string" &&
-      item.textObjects[0].text.length > 0
-    ) {
-      description = parseHtml(item.textObjects?.[0]?.text) as string;
-    }
-    const imageURL = getImageURLFromThumbnail(item.thumbnail);
-
-    return {
-      id: item.id,
-      title: item?.name? item.name : item.title || "",
-      description: description,
-      imageURL: imageURL,
-    };
-  });
-}
-
-type ThumbnailProps = MarvelResponseDataResultThumbnailType | null | undefined;
-
-export function getImageURLFromThumbnail(thumbnail: ThumbnailProps) {
-  if (thumbnail && typeof thumbnail == "object") {
-    if (
-      typeof thumbnail.path == "string" &&
-      typeof thumbnail.extension == "string"
-    ) {
-      return `${thumbnail.path}.${thumbnail.extension}`;
-    }
-  }
-  return "";
-}
 
 export function getServerCacheKey(reqUrl: string, targetBaseUrl: string): string {
   const urlObject = new URL(targetBaseUrl);
@@ -56,10 +13,7 @@ export function getServerCacheKey(reqUrl: string, targetBaseUrl: string): string
 }
 
 export function getTargetUrl(reqUrl: string, targetBaseUrl: string): string {
-  // const apiKeyPublic = process.env.MARVEL_ACCESS_PUBLIC_KEY;
-  // const apiKeyPrivate = process.env.MARVEL_ACCESS_PRIVATE_KEY;
   const timeStamp = getTimestamp("iso");
-  // const hash = generateMD5(`${timeStamp}`);
   const urlObject = new URL(targetBaseUrl);
 
   // Append incoming query parameters to the target URL
@@ -70,8 +24,6 @@ export function getTargetUrl(reqUrl: string, targetBaseUrl: string): string {
 
   // Add new query parameters
   urlObject.searchParams.append("ts", timeStamp as string);
-  // urlObject.searchParams.append("apikey", apiKeyPublic as string);
-  // urlObject.searchParams.append("hash", hash);
 
   return urlObject.toString();
 }
@@ -101,15 +53,6 @@ export function getTimestamp(
 }
 
 /**
- * Generates an MD5 hash for the given input.
- * @param input - The input string to hash.
- * @returns The MD5 hash as a hexadecimal string.
- */
-export function generateMD5(input: string): string {
-  return createHash("md5").update(input).digest("hex");
-}
-
-/**
  * Fetches data from the specified URL, handles caching, and manages errors.
  *
  * @param {string} url - The target URL to fetch data from.
@@ -118,12 +61,16 @@ export function generateMD5(input: string): string {
  * @returns {Promise<{ data?: any, error?: string, status?: number, isCached: boolean }>}
  *          Returns an object containing the fetched data, error message, status code, and caching status.
  */
-export async function fetchData(
+type FetchDataResult<T> =
+  | { data: T; error?: undefined; status?: undefined }
+  | { data?: undefined; error: string; status: number };
+
+export async function fetchData<T = unknown>(
   url: string,
   headers: Headers,
-  cacheKey: string
-) {
-  const cachedData = getCache(cacheKey);
+  cacheKey: string,
+): Promise<FetchDataResult<T>> {
+  const cachedData = getCache(cacheKey) as T | undefined;
   if (cachedData) {
     console.log(`\n+ Returning cached response for: "${cacheKey}"`);
     return { data: cachedData };
@@ -142,7 +89,7 @@ export async function fetchData(
       };
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as T;
     setCache(cacheKey, data); // Cache the data for future requests
 
     return { data };

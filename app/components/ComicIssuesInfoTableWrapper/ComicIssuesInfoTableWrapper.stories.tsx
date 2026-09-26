@@ -50,7 +50,13 @@ export const AllIssues: Story = {
     },
     msw: [
       http.get("/api/comic-issues", () =>
-        HttpResponse.json({ items: issueItems }),
+        HttpResponse.json({
+          total: issueItems.length,
+          limit: 20,
+          offset: 0,
+          has_next: false,
+          items: issueItems,
+        }),
       ),
     ],
   },
@@ -60,9 +66,145 @@ export const AllIssues: Story = {
     await expect(
       await canvas.findByRole("heading", { name: "The Marvel comic issues" }),
     ).toBeInTheDocument();
+    await expect(canvas.getByRole("banner")).toHaveClass("sticky", "top-12");
     await expect(await canvas.findByText("Amazing Fantasy #15"))
       .toBeInTheDocument();
     await expect(canvas.getAllByRole("row")).toHaveLength(3);
+  },
+};
+
+export const Paginated: Story = {
+  parameters: {
+    msw: [
+      http.get("/api/comic-issues", ({ request }) => {
+        const offset = Number(new URL(request.url).searchParams.get("offset"));
+        const isSecondPage = offset === 20;
+
+        return HttpResponse.json({
+          total: 21,
+          limit: 20,
+          offset,
+          has_next: !isSecondPage,
+          items: [isSecondPage ? issueItems[1] : issueItems[0]],
+        });
+      }),
+    ],
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText("Amazing Fantasy #15"),
+    ).toBeInTheDocument();
+    canvasElement
+      .querySelector('[data-testid="comic-issues-sentinel"]')
+      ?.scrollIntoView();
+    await expect(await canvas.findByText("The Avengers #1")).toBeInTheDocument();
+    await expect(canvas.getByText("Amazing Fantasy #15")).toBeInTheDocument();
+    await expect(canvas.getByText("End of comic issues.")).toBeInTheDocument();
+  },
+};
+
+export const LoadingNextPage: Story = {
+  parameters: {
+    msw: [
+      http.get("/api/comic-issues", async ({ request }) => {
+        const offset = Number(new URL(request.url).searchParams.get("offset"));
+
+        if (offset === 20) {
+          await delay("infinite");
+        }
+
+        return HttpResponse.json({
+          total: 21,
+          limit: 20,
+          offset,
+          has_next: offset === 0,
+          items: [issueItems[offset === 20 ? 1 : 0]],
+        });
+      }),
+    ],
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText("Amazing Fantasy #15"),
+    ).toBeInTheDocument();
+    canvasElement
+      .querySelector('[data-testid="comic-issues-sentinel"]')
+      ?.scrollIntoView();
+    await expect(
+      await canvas.findByText("Loading more comic issues…"),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("Amazing Fantasy #15")).toBeInTheDocument();
+  },
+};
+
+export const NextPageFailureAndRetry: Story = {
+  parameters: {
+    msw: [
+      http.get("/api/comic-issues", ({ request }) => {
+        const offset = Number(new URL(request.url).searchParams.get("offset"));
+
+        if (offset === 20) {
+          return HttpResponse.json(
+            { message: "Next issue page unavailable" },
+            { status: 503 },
+          );
+        }
+
+        return HttpResponse.json({
+          total: 21,
+          limit: 20,
+          offset: 0,
+          has_next: true,
+          items: [issueItems[0]],
+        });
+      }),
+    ],
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText("Amazing Fantasy #15"),
+    ).toBeInTheDocument();
+    canvasElement
+      .querySelector('[data-testid="comic-issues-sentinel"]')
+      ?.scrollIntoView();
+    await expect(
+      await canvas.findByText("Could not load more comic issues."),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Retry loading more" }),
+    );
+    await expect(
+      await canvas.findByText("Could not load more comic issues."),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("Amazing Fantasy #15")).toBeInTheDocument();
+  },
+};
+
+export const Completed: Story = {
+  parameters: {
+    msw: [
+      http.get("/api/comic-issues", () =>
+        HttpResponse.json({
+          total: 1,
+          limit: 20,
+          offset: 0,
+          has_next: false,
+          items: [issueItems[0]],
+        }),
+      ),
+    ],
+  },
+  async play({ canvasElement }) {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText("End of comic issues."))
+      .toBeInTheDocument();
+    await expect(
+      canvas.queryByTestId("comic-issues-sentinel"),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -117,12 +259,22 @@ export const SearchIssues: Story = {
   parameters: {
     msw: [
       http.get("/api/comic-issues", () =>
-        HttpResponse.json({ items: issueItems }),
+        HttpResponse.json({
+          total: issueItems.length,
+          limit: 20,
+          offset: 0,
+          has_next: false,
+          items: issueItems,
+        }),
       ),
       http.get("/api/comic-issues/search", ({ request }) => {
         const query = new URL(request.url).searchParams.get("q");
 
         return HttpResponse.json({
+          total: query === "Amazing Fantasy" ? 1 : 0,
+          limit: 20,
+          offset: 0,
+          has_next: false,
           items: query === "Amazing Fantasy" ? [issueItems[0]] : [],
         });
       }),
@@ -173,15 +325,26 @@ export const Error: Story = {
   async play({ canvasElement }) {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText("Failed to load")).toBeInTheDocument();
-    await expect(canvas.getByText("(No data)")).toBeInTheDocument();
+    await expect(
+      await canvas.findByText("Failed to load comic issues."),
+    ).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: "Retry" }))
+      .toBeInTheDocument();
   },
 };
 
 export const Empty: Story = {
   parameters: {
     msw: [
-      http.get("/api/comic-issues", () => HttpResponse.json({ items: [] })),
+      http.get("/api/comic-issues", () =>
+        HttpResponse.json({
+          total: 0,
+          limit: 20,
+          offset: 0,
+          has_next: false,
+          items: [],
+        }),
+      ),
     ],
   },
   async play({ canvasElement }) {
